@@ -60,21 +60,22 @@ class ProfileController extends Controller
 
             // Validate the request data
             $validated = $request->validate([
-                'name' => 'sometimes|string|max:255',
+                'name' => 'required|string|max:255',
                 'email' => [
-                    'sometimes',
+                    'required',
                     'email',
                     'max:255',
                     Rule::unique('users')->ignore($user->id),
                 ],
-                'age' => 'sometimes|integer|min:1|max:120',
-                'sex' => 'sometimes|in:male,female,other',
-                'phoneNumber' => 'sometimes|string|max:20',
-                'address' => 'sometimes|string|max:255',
-                'city' => 'sometimes|string|max:100',
-                'state' => 'sometimes|string|max:100',
-                'country' => 'sometimes|string|max:100',
-                'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048'
+                'age' => 'nullable|integer|min:1|max:120',
+                'sex' => 'nullable|in:male,female,other',
+                'status' => 'nullable|in:married,single,divorced',
+                'phoneNumber' => 'nullable|string|max:20',
+                'address' => 'nullable|string|max:255',
+                'city' => 'nullable|string|max:100',
+                'state' => 'nullable|string|max:100',
+                'country' => 'nullable|string|max:100',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
             ]);
 
             // Handle image upload if provided
@@ -89,7 +90,10 @@ class ProfileController extends Controller
             }
 
             // Update user profile
-            $user->fill($validated)->save();
+            $user->update($validated);
+
+            // Refresh the user model to get the latest data
+            $user->refresh();
 
             return response()->json([
                 'success' => true,
@@ -101,6 +105,7 @@ class ProfileController extends Controller
                     'role' => $user->role,
                     'age' => $user->age,
                     'sex' => $user->sex,
+                    'status' => $user->status,
                     'phoneNumber' => $user->phoneNumber,
                     'address' => $user->address,
                     'city' => $user->city,

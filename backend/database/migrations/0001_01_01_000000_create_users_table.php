@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->string('role')->default('buyer'); // seller, admin, buyer
+            $table->string('role')->default('buyer'); 
             $table->string('image')->nullable();
             $table->integer('age')->nullable();
             $table->enum('sex', ['male', 'female'])->nullable();

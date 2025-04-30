@@ -7,6 +7,7 @@ import Signup from '@/views/Signup.vue'
 import SellerDashboard from '@/views/SellerDashboard.vue'
 import BuyerDashboard from '@/views/BuyerDashboard.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
+import Profile from '@/views/Profile.vue'
 
 const routes = [
   {
@@ -37,6 +38,14 @@ const routes = [
       requiresGuest: true,
       hideNavbar: true,
       hideFooter: true 
+    }
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: Profile,
+    meta: { 
+      requiresAuth: true
     }
   },
   {

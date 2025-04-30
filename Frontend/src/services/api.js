@@ -3,14 +3,10 @@ import axios from 'axios';
 // Get API URL from environment variables or use default
 const API_URL = 'http://localhost:8000/api';
 
-// Add default image URL constant
-const DEFAULT_PROFILE_IMAGE = '/images/default-profile.png';
-
 // Axios instance
 const apiClient = axios.create({
     baseURL: API_URL,
     headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
     timeout: 30000,
@@ -23,6 +19,20 @@ apiClient.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // Don't set Content-Type for FormData requests
+        if (!(config.data instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+
+        // Log request data for debugging
+        console.log('Request config:', {
+            url: config.url,
+            method: config.method,
+            headers: config.headers,
+            data: config.data instanceof FormData ? 'FormData' : config.data
+        });
+
         return config;
     },
     (error) => Promise.reject(error)
@@ -64,15 +74,10 @@ export default {
     async login(credentials) {
         try {
             const response = await apiClient.post('/login', credentials);
-            
             if (response.data.token) {
-                // Store token and user data
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
-                
-                // Set default auth header
                 apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-                
                 return response.data;
             }
             throw new Error('Login failed: Invalid response format');
@@ -97,12 +102,9 @@ export default {
     async logout() {
         try {
             const response = await apiClient.post('/logout');
-            
-            // Clear auth data
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             delete apiClient.defaults.headers.common['Authorization'];
-            
             return response.data;
         } catch (error) {
             console.error('Logout failed:', error);
@@ -113,6 +115,7 @@ export default {
     // Get current user
     async getCurrentUser() {
         try {
+            ensureToken();
             const response = await apiClient.get('/user');
             return response.data;
         } catch (error) {
@@ -126,7 +129,7 @@ export default {
         try {
             ensureToken();
             const response = await apiClient.get('/profile');
-            return response.data;
+            return response.data.data; // Return the user data directly
         } catch (error) {
             console.error('Failed to get profile:', error);
             throw error;
@@ -136,28 +139,17 @@ export default {
     // Profile: Update User Profile
     async updateUserProfile(profileData) {
         try {
-            ensureToken();
-            
-            // Handle file upload if image is present
-            if (profileData.image instanceof File) {
-                const formData = new FormData();
-                Object.keys(profileData).forEach(key => {
-                    formData.append(key, profileData[key]);
-                });
-
-                const response = await apiClient.put('/profile', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
-                return response.data;
-            }
-
-            // Regular JSON update
-            const response = await apiClient.put('/profile', profileData);
+            console.log('API: Sending profile update data:', profileData);
+            const response = await apiClient.put('/profile', profileData, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            console.log('API: Profile update response:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Failed to update profile:', error);
+            console.error('API: Profile update error:', error.response?.data || error.message);
             throw error;
         }
     }

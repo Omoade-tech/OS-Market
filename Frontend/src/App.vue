@@ -38,3 +38,4 @@ router-view {
     flex: 1;
 }
 </style>
+
