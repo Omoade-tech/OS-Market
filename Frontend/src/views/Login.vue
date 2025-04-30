@@ -99,15 +99,23 @@
             timeout: 3000,
           });
           
-          // Redirect based on user role
-          const userRole = this.authStore.userRole;
+          // Get user role from the response
+          const userRole = response.user.role;
+          // console.log('User role:', userRole); 
           
-          if (userRole === 'admin') {
-            this.$router.push('/admindashboard');
-          } else if (userRole === 'seller') {
-            this.$router.push('/sellerdashboard');
-          } else {
-            this.$router.push('/buyerdashboard');
+          // Redirect based on user role
+          switch (userRole) {
+            case 'admin':
+              await this.$router.push('/admindashboard');
+              break;
+            case 'seller':
+              await this.$router.push('/sellerdashboard');
+              break;
+            case 'buyer':
+              await this.$router.push('/buyerdashboard');
+              break;
+            default:
+              await this.$router.push('/');
           }
         } catch (error) {
           console.error('Login error:', error);

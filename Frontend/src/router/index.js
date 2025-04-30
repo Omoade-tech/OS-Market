@@ -1,21 +1,28 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import Home from '@/views/Home.vue'
+import About from '@/views/About.vue'
+import Login from '@/views/Login.vue'
+import Signup from '@/views/Signup.vue'
+import SellerDashboard from '@/views/SellerDashboard.vue'
+import BuyerDashboard from '@/views/BuyerDashboard.vue'
+import AdminDashboard from '@/views/AdminDashboard.vue'
 
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: () => import('@/views/Home.vue')
+    component: Home
   },
   {
     path: '/about',
     name: 'about',
-    component: () => import('@/views/About.vue')
+    component: About
   },
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/Login.vue'),
+    component: Login,
     meta: { 
       requiresGuest: true,
       hideNavbar: true,
@@ -25,7 +32,7 @@ const routes = [
   {
     path: '/signup',
     name: 'signup',
-    component: () => import('@/views/Signup.vue'),
+    component: Signup,
     meta: { 
       requiresGuest: true,
       hideNavbar: true,
@@ -35,7 +42,7 @@ const routes = [
   {
     path: '/sellerdashboard',
     name: 'sellerdashboard',
-    component: () => import('@/views/SellerDashboard.vue'),
+    component: SellerDashboard,
     meta: { 
       requiresAuth: true,
       role: 'seller'
@@ -44,7 +51,7 @@ const routes = [
   {
     path: '/buyerdashboard',
     name: 'buyerdashboard',
-    component: () => import('@/views/BuyerDashboard.vue'),
+    component: BuyerDashboard,
     meta: { 
       requiresAuth: true,
       role: 'buyer'
@@ -53,7 +60,7 @@ const routes = [
   {
     path: '/admindashboard',
     name: 'admindashboard',
-    component: () => import('@/views/AdminDashboard.vue'),
+    component: AdminDashboard,
     meta: { 
       requiresAuth: true,
       role: 'admin'
@@ -70,22 +77,55 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
+  const userRole = authStore.userRole;
 
+  // Handle authentication
   if (to.meta.requiresAuth && !isAuthenticated) {
     next({ name: 'login' });
-  } else if (to.meta.requiresGuest && isAuthenticated) {
-    // Redirect based on user role
-    const userRole = authStore.userRole;
-    if (userRole === 'admin') {
-      next({ name: 'admindashboard' });
-    } else if (userRole === 'seller') {
-      next({ name: 'sellerdashboard' });
-    } else {
-      next({ name: 'buyerdashboard' });
-    }
-  } else {
-    next();
+    return;
   }
+
+  // Handle guest routes
+  if (to.meta.requiresGuest && isAuthenticated) {
+    // Redirect to appropriate dashboard based on role
+    switch (userRole) {
+      case 'admin':
+        next({ name: 'admindashboard' });
+        break;
+      case 'seller':
+        next({ name: 'sellerdashboard' });
+        break;
+      case 'buyer':
+        next({ name: 'buyerdashboard' });
+        break;
+      default:
+        next({ name: 'home' });
+    }
+    return;
+  }
+
+  // Handle role-based access
+  if (to.meta.role && isAuthenticated) {
+    if (to.meta.role !== userRole) {
+      // Redirect to appropriate dashboard if role doesn't match
+      switch (userRole) {
+        case 'admin':
+          next({ name: 'admindashboard' });
+          break;
+        case 'seller':
+          next({ name: 'sellerdashboard' });
+          break;
+        case 'buyer':
+          next({ name: 'buyerdashboard' });
+          break;
+        default:
+          next({ name: 'home' });
+      }
+      return;
+    }
+  }
+
+  next();
 });
 
 export default router
