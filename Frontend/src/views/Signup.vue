@@ -1,5 +1,5 @@
 <template>
-    <div class="container signup-page">
+    <div class="container-fluid signup-page">
       <div class="row">
         <div class="col-md-6 d-none d-md-flex align-items-center justify-content-center">
           <div class="quote-container">
@@ -82,6 +82,7 @@
                   <option value="" disabled>Choose a role</option>
                   <option value="seller">Seller</option>
                   <option value="buyer">Buyer</option>
+                  <option value="admin">Admin</option>
                 </select>
                 <div class="invalid-feedback" v-if="submitted && !role">Please select a role</div>
               </div>

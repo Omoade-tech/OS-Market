@@ -21,7 +21,7 @@
               <p class="fs-4 mb-4">
                 Where buyers and sellers meet for the exchange of services
               </p>
-              <router-link to="/register" 
+              <router-link to="/signup" 
                           class="btn btn-primary btn-lg rounded-pill px-5 py-3">
                 Let's Get Started
               </router-link>
