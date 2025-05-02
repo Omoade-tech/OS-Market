@@ -48,12 +48,14 @@
   <script>
   import { useAuthStore } from '@/stores/auth.js';
   import { useToast } from "vue-toastification";
+  import { useRouter } from 'vue-router';
   
   export default {
     setup() {
       const toast = useToast();
       const authStore = useAuthStore();
-      return { toast, authStore }
+      const router = useRouter();
+      return { toast, authStore, router }
     },
     
     data() {
@@ -101,21 +103,20 @@
           
           // Get user role from the response
           const userRole = response.user.role;
-          // console.log('User role:', userRole); 
           
           // Redirect based on user role
           switch (userRole) {
             case 'admin':
-              await this.$router.push('/admindashboard');
+              await this.router.push('/admindashboard');
               break;
             case 'seller':
-              await this.$router.push('/sellerdashboard');
+              await this.router.push('/sellerdashboard');
               break;
             case 'buyer':
-              await this.$router.push('/buyerdashboard');
+              await this.router.push('/buyerdashboard');
               break;
             default:
-              await this.$router.push('/');
+              await this.router.push('/');
           }
         } catch (error) {
           console.error('Login error:', error);

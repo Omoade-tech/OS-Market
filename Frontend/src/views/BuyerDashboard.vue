@@ -1,7 +1,32 @@
 <template>
-  <div class="container mt-4">
+  <div class="container-fluid mt-4">
     <div class="row">
-      <div class="col-12">
+      <!-- Sidebar -->
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Categories</h5>
+            <div class="list-group">
+              <a href="#" class="list-group-item list-group-item-action">Electronics</a>
+              <a href="#" class="list-group-item list-group-item-action">Clothing</a>
+              <a href="#" class="list-group-item list-group-item-action">Home & Garden</a>
+              <a href="#" class="list-group-item list-group-item-action">Books</a>
+              <a href="#" class="list-group-item list-group-item-action">Sports</a>
+            </div>
+
+            <h5 class="card-title mt-4">Condition</h5>
+            <div class="list-group">
+              <a href="#" class="list-group-item list-group-item-action">New</a>
+              <a href="#" class="list-group-item list-group-item-action">Like New</a>
+              <a href="#" class="list-group-item list-group-item-action">Good</a>
+              <a href="#" class="list-group-item list-group-item-action">Fair</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="col-md-9">
         <h1 class="mb-4">Buyer Dashboard</h1>
         <div class="card">
           <div class="card-body">
@@ -64,5 +89,9 @@ ul li:before {
   content: "✓";
   color: #28a745;
   margin-right: 0.5rem;
+}
+
+.list-group-item {
+  cursor: pointer;
 }
 </style>

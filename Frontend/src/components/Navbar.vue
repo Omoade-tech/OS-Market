@@ -14,15 +14,16 @@
             <li class="nav-item me-3">
               <router-link class="nav-link" to="/about">About</router-link>
             </li>
-          </template>
+            
+            </template>
             <!-- <li class="nav-item me-3">
               <router-link class="nav-link" to="/blog">Blog</router-link>
             </li> -->
-            <!-- <template v-if="isAuthenticated">
-            <li class="nav-item me-3">
-              <router-link class="nav-link" to="/post">Post</router-link>
-            </li>
-          </template> -->
+            <template v-if="isAuthenticated">
+              <li v-if="user?.role === 'buyer'" class="nav-item me-3">
+                <router-link class="nav-link" to="/listing">Listing</router-link>
+              </li>
+            </template>
           </ul>
         </div>
         <div class="navbar-nav ms-auto">
@@ -51,6 +52,9 @@
                   <router-link class="dropdown-item" to="/buyerdashboard">Dashboard</router-link>
                 </li>
                 <li v-if="user?.role === 'buyer'">
+                  <router-link class="dropdown-item" to="/listing">Listing</router-link>
+                </li>
+                <li v-if="user?.role === 'buyer'">
                   <router-link class="dropdown-item" to="/profile">Profile</router-link>
                 </li>
                 <li v-if="user?.role === 'admin'">
@@ -65,6 +69,7 @@
                 </li>
               </ul>
             </li>
+            
           </template>
         </div>
       </div>

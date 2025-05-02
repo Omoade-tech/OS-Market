@@ -109,12 +109,14 @@
   <script>
   import { useAuthStore } from '@/stores/auth.js';
   import { useToast } from "vue-toastification";
+  import { useRouter } from 'vue-router';
   
   export default {
     setup() {
       const toast = useToast();
       const authStore = useAuthStore();
-      return { toast, authStore }
+      const router = useRouter();
+      return { toast, authStore, router }
     },
     
     data() {
@@ -170,7 +172,7 @@
             timeout: 3000,
           });
           
-          this.$router.push('/login');
+          this.router.push('/login');
         } catch (error) {
           console.error('Registration error:', error);
           

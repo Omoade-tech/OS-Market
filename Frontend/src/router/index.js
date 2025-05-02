@@ -2,12 +2,14 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import Home from '@/views/Home.vue'
 import About from '@/views/About.vue'
+import Listing from '@/views/Listing.vue'
 import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
 import SellerDashboard from '@/views/SellerDashboard.vue'
 import BuyerDashboard from '@/views/BuyerDashboard.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
 import Profile from '@/views/Profile.vue'
+import ListingDetail from '@/views/ListingDetail.vue'
 
 const routes = [
   {
@@ -19,6 +21,19 @@ const routes = [
     path: '/about',
     name: 'about',
     component: About
+  },
+  {
+    path: "/listing",
+    name: 'listing',
+    component: Listing
+  },
+  {
+    path: "/listings/:id",
+    name: 'listing-detail',
+    component: ListingDetail,
+    meta: { 
+      requiresAuth: true
+    }
   },
   {
     path: '/login',

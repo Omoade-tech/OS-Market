@@ -112,8 +112,8 @@
                     <label for="status" class="form-label">Status</label>
                     <select class="form-select" id="status" v-model="profileForm.status">
                       <option value="">Select</option>
-                      <option value="married">Married</option>
                       <option value="single">Single</option>
+                      <option value="married">Married</option>
                       <option value="divorced">Divorced</option>
                     </select>
                   </div>
@@ -171,6 +171,13 @@
   import * as bootstrap from 'bootstrap';
   
   export default {
+    setup() {
+      const authStore = useAuthStore();
+      const router = useRouter();
+      const toast = useToast();
+      return { authStore, router, toast }
+    },
+
     data() {
       return {
         user: null,
@@ -195,189 +202,111 @@
         modalInstance: null
       };
     },
+
     created() {
       this.fetchUserProfile();
     },
+
     mounted() {
-      const modalElement = document.getElementById('editProfileModal');
-      if (modalElement) {
-        this.modalInstance = new bootstrap.Modal(modalElement);
-      }
+      this.modalInstance = new bootstrap.Modal(document.getElementById('editProfileModal'));
     },
-    setup() {
-      const router = useRouter();
-      const toast = useToast();
-      const authStore = useAuthStore();
-      return { router, toast, authStore };
-    },
+
     methods: {
       async fetchUserProfile() {
         this.loading = true;
         this.error = null;
         this.isAuthError = false;
-  
+
         try {
-          const token = localStorage.getItem('token');
-          if (!token) {
-            this.error = 'No authentication token found. Please log in.';
-            this.isAuthError = true;
-            this.loading = false;
-            return;
-          }
-  
-          const authStore = useAuthStore();
-          await authStore.fetchUserProfile();
-          this.user = { ...authStore.user };
-          if (!this.user) {
-            this.error = 'Failed to load user profile data.';
-          } else {
-            this.initializeProfileForm();
-          }
+          const response = await this.authStore.fetchUserProfile();
+          this.user = response;
+          this.profileForm = { ...response };
         } catch (error) {
-          console.error('Profile fetch error:', error);
-          this.error = error.response?.data?.message || error.message || 'Failed to load profile.';
-          if (error.response && error.response.status === 401) {
-            this.isAuthError = true;
-          }
+          console.error('Error fetching profile:', error);
+          this.error = error.message || 'Failed to fetch profile';
+          this.isAuthError = error.response?.status === 401;
         } finally {
           this.loading = false;
         }
       },
-  
-      initializeProfileForm() {
-        if (!this.user) return;
-  
-        console.log('Initializing profile form with user data:', this.user);
-  
-        this.profileForm = {
-          name: this.user.name || '',
-          email: this.user.email || '',
-          phoneNumber: this.user.phoneNumber || '',
-          age: this.user.age || '',
-          sex: this.user.sex || '',
-          status: this.user.status || '',
-          address: this.user.address || '',
-          city: this.user.city || '',
-          state: this.user.state || '',
-          country: this.user.country || '',
-          image: null
-        };
-  
-        console.log('Profile form initialized:', this.profileForm);
+
+      openEditModal() {
+        this.profileForm = { ...this.user };
+        this.modalInstance.show();
       },
-  
+
       handleImageUpload(event) {
         const file = event.target.files[0];
+        console.log('Selected file:', file);
+        console.log('File type:', file?.type);
+        console.log('File size:', file?.size);
+        
         if (file) {
-          if (file.size > 2 * 1024 * 1024) {
-            this.updateError = 'Image size should not exceed 2MB';
-            event.target.value = '';
+          // Validate file type
+          const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+          console.log('Valid types:', validTypes);
+          console.log('File type check:', validTypes.includes(file.type));
+          
+          if (!validTypes.includes(file.type)) {
+            this.toast.error('Invalid file type. Please upload a JPEG, PNG, or GIF image.', {
+              timeout: 5000,
+            });
+            event.target.value = ''; // Clear the file input
             return;
           }
-  
-          if (!file.type.match('image.*')) {
-            this.updateError = 'Please select an image file';
-            event.target.value = '';
+
+          // Validate file size (2MB = 2 * 1024 * 1024 bytes)
+          const maxSize = 2 * 1024 * 1024;
+          console.log('File size check:', file.size <= maxSize);
+          
+          if (file.size > maxSize) {
+            this.toast.error('File size too large. Maximum size is 2MB.', {
+              timeout: 5000,
+            });
+            event.target.value = ''; // Clear the file input
             return;
           }
-  
-          this.profileForm.image = file;
-          this.updateError = null;
-          console.log('Selected image:', file);
+
+          // Create a new File object to ensure proper type
+          const imageFile = new File([file], file.name, {
+            type: file.type,
+            lastModified: file.lastModified
+          });
+          
+          console.log('Created image file:', imageFile);
+          console.log('Image file type:', imageFile.type);
+          console.log('Image file instanceof File:', imageFile instanceof File);
+          console.log('Image file instanceof Blob:', imageFile instanceof Blob);
+
+          this.profileForm.image = imageFile;
         }
       },
-  
-      openEditModal() {
-        this.initializeProfileForm();
-        this.updateError = null;
-  
-        if (this.modalInstance) {
-          this.modalInstance.show();
-        } else {
-          const modalElement = document.getElementById('editProfileModal');
-          if (modalElement) {
-            this.modalInstance = new bootstrap.Modal(modalElement);
-            this.modalInstance.show();
-          }
-        }
-      },
-  
+
       async submitProfileUpdate() {
         this.updating = true;
         this.updateError = null;
-  
+
         try {
-          // Log the form data before validation
-          console.log('Profile form data before validation:', this.profileForm);
-  
-          // Validate required fields first
-          if (!this.profileForm.name?.trim()) {
-            throw new Error('Name is required');
-          }
-          if (!this.profileForm.email?.trim()) {
-            throw new Error('Email is required');
-          }
-  
-          // Create a clean data object with only the fields we want to send
-          const updateData = {
-            name: this.profileForm.name.trim(),
-            email: this.profileForm.email.trim(),
-            status: this.profileForm.status || null // Explicitly include status
-          };
-  
-          // Add other fields only if they have values
-          Object.keys(this.profileForm).forEach(key => {
-            if (key !== 'name' && key !== 'email' && key !== 'image' && key !== 'status' && 
-                this.profileForm[key] !== null && this.profileForm[key] !== '') {
-              updateData[key] = this.profileForm[key];
-            }
-          });
-  
-          // Log the data being sent
-          console.log('Data being sent to server:', updateData);
-  
-          const authStore = useAuthStore();
-          const response = await authStore.updateProfile(updateData);
-  
-          if (response) {
-            // Update the local user data
-            this.user = { ...response };
-            
-            // Update the auth store
-            authStore.user = { ...response };
-            localStorage.setItem('user', JSON.stringify(response));
-  
-            this.toast.success('Profile updated successfully!', {
-              timeout: 3000,
+          // Create a copy of the form data to avoid modifying the original
+          const formData = { ...this.profileForm };
+          
+          // Ensure required fields are present
+          if (!formData.name || !formData.email) {
+            this.toast.error('Name and email are required fields', {
+              timeout: 5000,
             });
-  
-            // Clear file input
-            const fileInput = document.getElementById('profileImage');
-            if (fileInput) {
-              fileInput.value = '';
-            }
-  
-            if (this.modalInstance) {
-              this.modalInstance.hide();
-            }
-  
-            // Refresh the profile data
-            await this.fetchUserProfile();
-          } else {
-            throw new Error('Failed to update profile');
+            return;
           }
+
+          const response = await this.authStore.updateProfile(formData);
+          this.user = response;
+          this.modalInstance.hide();
+          this.toast.success('Profile updated successfully!', {
+            timeout: 3000,
+          });
         } catch (error) {
-          console.error('Profile update error:', error);
-          if (error.response?.data?.errors) {
-            console.error('Validation errors:', error.response.data.errors);
-            // Show specific validation errors
-            const errorMessages = Object.entries(error.response.data.errors)
-              .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-              .join('\n');
-            this.updateError = errorMessages;
-          } else {
-            this.updateError = error.response?.data?.message || error.message || 'Failed to update profile. Please try again.';
-          }
+          console.error('Error updating profile:', error);
+          this.updateError = error.message || 'Failed to update profile';
           this.toast.error(this.updateError, {
             timeout: 5000,
           });
@@ -385,7 +314,7 @@
           this.updating = false;
         }
       },
-  
+
       redirectToLogin() {
         this.router.push('/login');
       }

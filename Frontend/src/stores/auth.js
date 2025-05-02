@@ -1,55 +1,21 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:8000/api';
-
-// Create axios instance with default config
-const apiClient = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    },
-    timeout: 30000
-});
-
-// Request Interceptor
-apiClient.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-            console.log('Authorization header set:', config.headers.Authorization); // Debug log
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
-// Response Interceptor
-apiClient.interceptors.response.use(
-    response => response,
-    error => {
-        if (error.response) {
-            const { status } = error.response;
-            if (status === 401) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-            }
-        }
-        return Promise.reject(error);
-    }
-);
+import api from '@/services/api.js';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
+        // Auth state
         user: JSON.parse(localStorage.getItem('user')) || null,
         token: localStorage.getItem('token') || null,
         loading: false,
-        error: null
+        error: null,
+
+        // Listings state
+        listings: [],
+        currentListing: null,
     }),
 
     getters: {
+        // Auth getters
         isAuthenticated() {
             return !!this.token;
         },
@@ -58,22 +24,37 @@ export const useAuthStore = defineStore('auth', {
         },
         userRole() {
             return this.user?.role || null;
+        },
+
+        // Listings getters
+        getListings(state) {
+            return state.listings;
+        },
+        getCurrentListing(state) {
+            return state.currentListing;
+        },
+        isLoading(state) {
+            return state.loading;
+        },
+        getError(state) {
+            return state.error;
         }
     },
 
     actions: {
+        // Auth actions
         async login(credentials) {
             this.loading = true;
             this.error = null;
 
             try {
-                const response = await apiClient.post('/login', credentials);
-                if (response.data.token) {
-                    this.token = response.data.token;
-                    this.user = response.data.user;
-                    localStorage.setItem('token', response.data.token);
-                    localStorage.setItem('user', JSON.stringify(response.data.user));
-                    return response.data;
+                const response = await api.login(credentials);
+                if (response.token) {
+                    this.token = response.token;
+                    this.user = response.user;
+                    localStorage.setItem('token', response.token);
+                    localStorage.setItem('user', JSON.stringify(response.user));
+                    return response;
                 }
                 throw new Error('Login failed: Invalid response format');
             } catch (error) {
@@ -89,11 +70,11 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                const response = await apiClient.post('/register', userData);
-                if (response.data.success) {
-                    return response.data;
+                const response = await api.register(userData);
+                if (response.success) {
+                    return response;
                 }
-                throw new Error(response.data.message || 'Registration failed');
+                throw new Error(response.message || 'Registration failed');
             } catch (error) {
                 this.error = error.response?.data?.message || error.message || 'Registration failed';
                 throw error;
@@ -103,7 +84,7 @@ export const useAuthStore = defineStore('auth', {
         },
 
         logout() {
-            apiClient.post('/logout').catch(error => {
+            api.logout().catch(error => {
                 console.error('Logout request failed:', error);
             });
             this.user = null;
@@ -118,11 +99,11 @@ export const useAuthStore = defineStore('auth', {
 
         async getCurrentUser() {
             try {
-                const response = await apiClient.get('/user');
-                if (response.data) {
-                    this.user = response.data;
-                    localStorage.setItem('user', JSON.stringify(response.data));
-                    return response.data;
+                const response = await api.getCurrentUser();
+                if (response) {
+                    this.user = response;
+                    localStorage.setItem('user', JSON.stringify(response));
+                    return response;
                 }
                 throw new Error('Failed to get current user');
             } catch (error) {
@@ -142,13 +123,13 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                const response = await apiClient.get('/profile');
-                if (response.data.success) {
-                    this.user = response.data.data;
-                    localStorage.setItem('user', JSON.stringify(response.data.data));
-                    return response.data.data;
+                 const response = await api.getUserProfile();
+                if (response) {
+                    this.user = response;
+                    localStorage.setItem('user', JSON.stringify(response));
+                    return response;
                 }
-                throw new Error(response.data.message || 'Failed to fetch profile');
+                throw new Error('Failed to fetch profile');
             } catch (error) {
                 this.error = error.response?.data?.message || error.message || 'Failed to fetch profile';
                 throw error;
@@ -162,44 +143,135 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                const config = {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                };
-
-                // Log request data for debugging
-                console.log('Sending profile update data:', profileData);
-
-                // Ensure status is included in the request
-                const requestData = {
-                    ...profileData,
-                    status: profileData.status || null
-                };
-
-                const response = await apiClient.put('/profile', requestData, config);
-                console.log('Update profile response:', response.data);
-
-                if (response.data.success) {
-                    const updatedUser = response.data.data;
-                    this.user = updatedUser;
-                    localStorage.setItem('user', JSON.stringify(updatedUser));
-                    return updatedUser;
+                const response = await api.updateUserProfile(profileData);
+                if (response && response.data) {
+                    this.user = response.data;
+                    localStorage.setItem('user', JSON.stringify(response.data));
+                    return response.data;
                 }
-                throw new Error(response.data.message || 'Failed to update profile');
+                throw new Error('Failed to update profile: Invalid response format');
             } catch (error) {
-                console.error('Profile update error:', error);
-                if (error.response?.data?.errors) {
-                    console.error('Validation errors:', error.response.data.errors);
-                    // Format validation errors for better display
-                    const formattedErrors = Object.entries(error.response.data.errors)
-                        .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-                        .join('\n');
-                    this.error = formattedErrors;
+                this.error = error.response?.data?.message || error.message || 'Failed to update profile';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        // Listing actions
+        async fetchListings(page = 1) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.getListings(page);
+                if (response.success) {
+                    this.listings = response.data;
+                    return response;
                 } else {
-                    this.error = error.response?.data?.message || error.message || 'Failed to update profile';
+                    throw new Error(response.message || 'Failed to fetch listings');
                 }
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to fetch listings';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async fetchUserListings(userId) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.getUserListings(userId);
+                this.listings = response.data;
+                return response;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to fetch user listings';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async fetchListingById(id) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.getListingById(id);
+                this.currentListing = response;
+                return response;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to fetch listing';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async createListing(listingData) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.createListing(listingData);
+                await this.fetchListings();
+                return response;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to create listing';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async updateListing(id, listingData) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.updateListing(id, listingData);
+
+                if (this.currentListing && this.currentListing.id === id) {
+                    this.currentListing = response;
+                }
+
+                await this.fetchListings();
+                return response;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to update listing';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async deleteListing(id) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                await api.deleteListing(id);
+                this.listings = this.listings.filter(listing => listing.id !== id);
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to delete listing';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async sendMessage(messageData) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.sendMessage(messageData);
+                return response;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to send message';
                 throw error;
             } finally {
                 this.loading = false;
