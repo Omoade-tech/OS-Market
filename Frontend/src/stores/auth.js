@@ -369,6 +369,44 @@ export const useAuthStore = defineStore('auth', {
                 page: 1,
                 per_page: 10
             };
+        },
+
+        // Seller listing actions
+        async fetchSellerListings() {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.getSellerListings();
+                if (response.success) {
+                    this.listings = response.data;
+                    return response.data;
+                } else {
+                    throw new Error(response.message || 'Failed to fetch seller listings');
+                }
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message || 'Failed to fetch seller listings';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async deleteListing(listingId) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.deleteListing(listingId);
+                // Remove the deleted listing from the state
+                this.listings = this.listings.filter(listing => listing.id !== listingId);
+                return response;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to delete listing';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
         }
     }
 });

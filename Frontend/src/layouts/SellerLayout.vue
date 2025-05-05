@@ -1,39 +1,42 @@
 <template>
-  <div class="seller-dashboard">
+  <div class="seller-layout">
     <SellerSidebar />
-    <div class="main-content">
+    <main class="main-content">
       <router-view></router-view>
-    </div>
+    </main>
   </div>
 </template>
 
 <script>
+import SellerSidebar from '@/components/SellerSidebar.vue';
+
 export default {
-  name: 'SellerDashboard'
+  name: 'SellerLayout',
+  components: {
+    SellerSidebar
+  }
 }
 </script>
 
 <style scoped>
-.seller-dashboard {
+.seller-layout {
   display: flex;
   min-height: 100vh;
-  padding-top: 60px; 
+  margin-top: 60px; /* Account for fixed navbar */
 }
 
 .main-content {
   flex: 1;
-  margin-left: 250px;
+  margin-left: 250px; /* Same as sidebar width */
   padding: 20px;
   background-color: #f8f9fa;
-  min-height: 100vh;
+  min-height: calc(100vh - 60px);
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0;
-    margin-top: 60px; 
-    padding: 15px;
   }
 }
-</style>
+</style> 

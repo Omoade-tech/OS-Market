@@ -38,4 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/messages/send', [MessageController::class, 'send']);
     Route::get('/messages/dashboard', [MessageController::class, 'dashboard']);
     Route::get('/messages/conversation/{userId}', [MessageController::class, 'conversation']);
+
+    Route::get('/seller/listings', [ListingController::class, 'getSellerListings']);
 });

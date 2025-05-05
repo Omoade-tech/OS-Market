@@ -354,7 +354,6 @@ export default {
         }
     },
 
-
     // Send message to seller
     async sendMessage(messageData) {
         try {
@@ -366,6 +365,34 @@ export default {
             return response.data;
         } catch (error) {
             console.error('Failed to send message:', error);
+            throw error;
+        }
+    },
+
+    // Get seller listings
+    async getSellerListings() {
+        try {
+            ensureToken();
+            const response = await apiClient.get('/seller/listings');
+            if (response.data && response.data.success) {
+                return response.data;
+            } else {
+                throw new Error('Invalid response format from server');
+            }
+        } catch (error) {
+            console.error('Failed to fetch seller listings:', error);
+            throw error;
+        }
+    },
+
+    // Delete listing
+    async deleteListing(listingId) {
+        try {
+            ensureToken();
+            const response = await apiClient.delete(`/listings/${listingId}`);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to delete listing:', error);
             throw error;
         }
     }

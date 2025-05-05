@@ -10,6 +10,9 @@ import BuyerDashboard from '@/views/BuyerDashboard.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
 import Profile from '@/views/Profile.vue'
 import ListingDetail from '@/views/ListingDetail.vue'
+import AddListing from '@/views/seller/AddListing.vue'
+import SellerLayout from '@/layouts/SellerLayout.vue'
+import ViewSellerListing from '@/views/seller/ViewSellerListing.vue'
 
 const routes = [
   {
@@ -64,13 +67,34 @@ const routes = [
     }
   },
   {
-    path: '/sellerdashboard',
-    name: 'sellerdashboard',
-    component: SellerDashboard,
+    path: '/seller',
+    component: SellerLayout,
     meta: { 
       requiresAuth: true,
       role: 'seller'
-    }
+    },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'sellerdashboard',
+        component: SellerDashboard
+      },
+      {
+        path: 'add-listing',
+        name: 'add-listing',
+        component: AddListing
+      },
+      {
+        path: 'listings',
+        name: 'view-seller-listings',
+        component: ViewSellerListing
+      },
+      {
+        path: 'profile',
+        name: 'seller-profile',
+        component: Profile
+      }
+    ]
   },
   {
     path: '/buyerdashboard',

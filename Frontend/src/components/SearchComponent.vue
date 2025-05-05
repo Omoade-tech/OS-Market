@@ -1,5 +1,5 @@
 <template>
-  <div class="card mb-5">
+  <div class="card mt-4 mb-5">
     <div class="card-body">
       <!-- Error Message -->
       <div v-if="searchError" class="alert alert-danger mb-3">

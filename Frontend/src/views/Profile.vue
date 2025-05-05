@@ -1,7 +1,7 @@
 <template>
-    <div class="container mb-3">
+    <div class="container mb-3 mt-6">
       <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-5">
           <div class="card">
             <div class="card-header">User Details</div>
   

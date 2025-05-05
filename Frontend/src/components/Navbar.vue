@@ -41,7 +41,7 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                 <li v-if="user?.role === 'seller'">
-                  <router-link class="dropdown-item" :to="'/sellerdashboard/'">Dashboard</router-link>
+                  <router-link class="dropdown-item" :to="'/seller/dashboard'">Dashboard</router-link>
                 </li>
                 <li v-if="user?.role === 'seller'">
                   <router-link class="dropdown-item" to="/profile">Profile</router-link>
@@ -109,10 +109,17 @@
   <style scoped>
   .navbar {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: #fff;
   }
   
   .dropdown-menu {
     min-width: 200px;
+    z-index: 1100; /* Higher than sidebar */
   }
   
   .dropdown-item:active {

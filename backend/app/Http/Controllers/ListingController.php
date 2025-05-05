@@ -286,4 +286,40 @@ class ListingController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to fetch filter options.'], 500);
         }
     }
+
+    public function getSellerListings(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            $listings = Listing::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($listing) {
+                    return [
+                        'id' => $listing->id,
+                        'title' => $listing->name,
+                        'description' => $listing->description,
+                        'price' => $listing->price,
+                        'image' => $listing->image,
+                        'category' => $listing->categories,
+                        'condition' => $listing->condition,
+                        'status' => $listing->status,
+                        'created_at' => $listing->created_at->format('Y-m-d H:i:s'),
+                        'updated_at' => $listing->updated_at->format('Y-m-d H:i:s')
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $listings
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch listings',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
