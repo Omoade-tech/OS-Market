@@ -158,29 +158,132 @@ class ListingController extends Controller
     public function search(Request $request)
     {
         try {
-            $query = Listing::query();
+            
+            $query = Listing::query()->with('user');
 
+            // Search by name
             if ($request->filled('name')) {
-                $query->where('name', 'like', '%' . $request->name . '%');
+                $query->where('name', 'like', '%' . $request->input('name') . '%');
             }
 
+            // Search by location
             if ($request->filled('location')) {
-                $query->where('location', 'like', '%' . $request->location . '%');
+                $query->where('location', 'like', '%' . $request->input('location') . '%');
             }
 
+            // Filter by category
             if ($request->filled('categories')) {
-                $query->where('categories', $request->categories);
+                $query->where('categories', $request->input('categories'));
             }
 
+            // Filter by condition
             if ($request->filled('condition')) {
-                $query->where('condition', $request->condition);
+                $query->where('condition', $request->input('condition'));
             }
 
-            $results = $query->latest()->paginate(10);
+            // Get pagination parameters
+            $perPage = $request->input('per_page', 10);
+            $page = $request->input('page', 1);
 
-            return response()->json(['success' => true, 'data' => $results], 200);
+            // Get results with pagination
+            $results = $query->latest()->paginate($perPage);
+
+
+            // Transform the data to include user information
+            $transformedData = collect($results->items())->map(function ($listing) {
+                return [
+                    'id' => $listing->id,
+                    'name' => $listing->name,
+                    'price' => $listing->price,
+                    'location' => $listing->location,
+                    'description' => $listing->description,
+                    'categories' => $listing->categories,
+                    'condition' => $listing->condition,
+                    'image' => $listing->image,
+                    'created_at' => $listing->created_at,
+                    'user' => $listing->user ? [
+                        'id' => $listing->user->id,
+                        'name' => $listing->user->name,
+                    ] : null,
+                ];
+            })->all();
+
+            return response()->json([
+                'success' => true, 
+                'data' => $transformedData,
+                'pagination' => [
+                    'current_page' => $results->currentPage(),
+                    'last_page' => $results->lastPage(),
+                    'per_page' => $results->perPage(),
+                    'total' => $results->total(),
+                    'from' => $results->firstItem(),
+                    'to' => $results->lastItem(),
+                ],
+                'filters' => [
+                    'name' => $request->input('name'),
+                    'location' => $request->input('location'),
+                    'categories' => $request->input('categories'),
+                    'condition' => $request->input('condition'),
+                ]
+            ], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Search failed.'], 500);
+            
+            
+            return response()->json([
+                'success' => false, 
+                'message' => 'Search failed.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get filter options for categories and conditions
+     */
+    public function getFilterOptions()
+    {
+        try {
+            $categories = [
+                'electronics',
+                'fashion',
+                'home-garden',
+                'vehicles',
+                'real-estate',
+                'jobs',
+                'services',
+                'education',
+                'health-beauty',
+                'sports-fitness',
+                'pets',
+                'food-drinks',
+                'art-collectibles',
+                'books-music-movies',
+                'business-equipment'
+            ];
+
+            $conditions = [
+                'new',
+                'used-good',
+                'used-like-new',
+                'used-fair'
+            ];
+
+            // Get unique locations from existing listings
+            $locations = Listing::where('status', 'approved')
+                ->distinct()
+                ->pluck('location')
+                ->toArray();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'categories' => $categories,
+                    'conditions' => $conditions,
+                    'locations' => $locations
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to fetch filter options.'], 500);
         }
     }
 }

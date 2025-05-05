@@ -19,7 +19,23 @@ return new class extends Migration
             $table->string('name');
             $table->string('location');
             $table->text('description');
-            $table->string('categories');
+            $table->enum('categories', [
+                'electronics',
+                'fashion',
+                'home-garden',
+                'vehicles',
+                'real-estate',
+                'jobs',
+                'services',
+                'education',
+                'health-beauty',
+                'sports-fitness',
+                'pets',
+                'food-drinks',
+                'art-collectibles',
+                'books-music-movies',
+                'business-equipment'
+            ]);
             $table->enum('condition', ['new', 'used-good', 'used-like-new', 'used-fair']);
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->text('rejection_reason')->nullable();

@@ -15,12 +15,30 @@ class ListingFactory extends Factory
         return [
             'user_id' => User::factory(), 
             'image' => $this->faker->imageUrl(640, 480, 'products', true),
-            'price' => $this->faker->randomFloat(2, 100, 10000),
-            'name' => $this->faker->words(3, true),
+            'price' => $this->faker->randomFloat(2, 10, 10000),
+            'name' => $this->faker->sentence(3),
             'location' => $this->faker->city,
-            'description' => $this->faker->paragraph,
-            'categories' => $this->faker->word,
+            'description' => $this->faker->paragraph(3),
+            'categories' => $this->faker->randomElement([
+                'electronics',
+                'fashion',
+                'home-garden',
+                'vehicles',
+                'real-estate',
+                'jobs',
+                'services',
+                'education',
+                'health-beauty',
+                'sports-fitness',
+                'pets',
+                'food-drinks',
+                'art-collectibles',
+                'books-music-movies',
+                'business-equipment'
+            ]),
             'condition' => $this->faker->randomElement(['new', 'used-good', 'used-like-new', 'used-fair']),
+            // 'status' => 'pending',
+            // 'rejection_reason' => null,
         ];
     }
 }

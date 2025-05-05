@@ -2,15 +2,23 @@
   <div class="container mt-4">
     <div class="row">
       <div class="col-12">
-        <h1 class="mb-4">Listings</h1>
+        <!-- <h1 class="mb-4">Listings</h1> -->
         
         <!-- Not Authenticated State -->
         <div v-if="!isAuthenticated" class="alert alert-warning">
           Please <router-link to="/login">login</router-link> to view listings.
         </div>
 
+        <!-- Search Component -->
+        <SearchComponent 
+          v-else 
+          @search-results="handleSearchResults"
+          @search-error="handleSearchError"
+          @clear-filters="handleClearFilters"
+        />
+
         <!-- Loading State -->
-        <div v-else-if="loading" class="text-center">
+        <div v-if="loading" class="text-center">
           <div class="spinner-border" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
@@ -23,12 +31,22 @@
 
         <!-- No Results -->
         <div v-else-if="listings.length === 0" class="alert alert-info">
-          No listings available.
+          <template v-if="isSearching">
+            No listings found matching your search criteria.
+          </template>
+          <template v-else>
+            No listings available.
+          </template>
         </div>
 
         <!-- Listings Grid -->
         <div v-else>
-          <div class="row g-4">
+          <!-- Search Results Info -->
+          <div v-if="isSearching" class="alert alert-success mb-4">
+            Found {{ pagination.total }} listings matching your search criteria.
+          </div>
+
+          <div class="row g-5 ">
             <div v-for="listing in listings" :key="listing.id" class="col-md-4 col-sm-6">
               <div class="card h-100 listing-card">
                 <div class="card-img-container">
@@ -106,21 +124,17 @@
         </div>
       </div>
     </div>
-  </div>
+    </div>
 </template>
 
 <script>
 import { useAuthStore } from '@/stores/auth.js';
-import { computed } from 'vue';
+import SearchComponent from '@/components/SearchComponent.vue';
 
 export default {
-  setup() {
-    const authStore = useAuthStore();
-    const isAuthenticated = computed(() => authStore.isAuthenticated);
-    
-    return {
-      isAuthenticated
-    };
+  name: 'ListingView',
+  components: {
+    SearchComponent
   },
 
   data() {
@@ -136,8 +150,15 @@ export default {
         total: 0,
         from: 0,
         to: 0
-      }
+      },
+      isSearching: false
     };
+  },
+
+  computed: {
+    isAuthenticated() {
+      return this.authStore.isAuthenticated;
+    }
   },
 
   methods: {
@@ -149,6 +170,7 @@ export default {
 
       this.loading = true;
       this.error = null;
+      this.isSearching = false;
       
       try {
         const response = await this.authStore.fetchListings(page);
@@ -190,8 +212,31 @@ export default {
       }
     },
 
+    handleSearchResults({ listings, pagination, filters }) {
+      this.isSearching = true;
+      this.listings = listings;
+      this.pagination = pagination;
+      this.error = null;
+    },
+
+    handleSearchError(error) {
+      this.error = error;
+      this.listings = [];
+      this.isSearching = true;
+    },
+
+    handleClearFilters() {
+      this.isSearching = false;
+      this.fetchListings();
+    },
+
     changePage(page) {
-      this.fetchListings(page);
+      if (this.isSearching) {
+        this.searchFilters.page = page;
+        this.handleSearch();
+      } else {
+        this.fetchListings(page);
+      }
     },
 
     viewListing(id) {

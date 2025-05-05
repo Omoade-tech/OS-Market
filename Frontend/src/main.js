@@ -9,6 +9,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import App from './App.vue'
 import router from './router'
+import Listing from './views/Listing.vue'
 
 const app = createApp(App)
 
@@ -22,8 +23,10 @@ const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
-//
 app.use(Toast);
+
+// Register global components
+app.component('Listing', Listing)
 
 // Mount the app to the DOM
 app.mount('#app')

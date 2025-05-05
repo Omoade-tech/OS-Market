@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Listing routes
     Route::get('/listings', [ListingController::class, 'index']);             
     Route::get('/listings/search', [ListingController::class, 'search']);     
+    Route::get('/listings/filter-options', [ListingController::class, 'getFilterOptions']);     
         // Get listings by specific user
     Route::get('/listings/user/{user_id}', [ListingController::class, 'userListings']); 
 

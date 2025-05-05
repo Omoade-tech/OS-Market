@@ -206,13 +206,40 @@ export default {
     },
 
     // Listings: Search listings
-    async searchListings(query) {
+    async searchListings(filters) {
         try {
             ensureToken();
-            const response = await apiClient.get('/listings/search', { params: { query } });
-            return response.data;
+            // Convert filters to query parameters
+            const params = new URLSearchParams();
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value !== null && value !== undefined && value !== '') {
+                    params.append(key, value);
+                }
+            });
+
+            const response = await apiClient.get('/listings/search', { 
+                params: params
+            });
+            
+            if (response.data && response.data.success) {
+                return response.data;
+            } else {
+                throw new Error('Invalid response format from server');
+            }
         } catch (error) {
             console.error('Failed to search listings:', error);
+            throw error;
+        }
+    },
+
+    // Listings: Get filter options
+    async getFilterOptions() {
+        try {
+            ensureToken();
+            const response = await apiClient.get('/listings/filter-options');
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch filter options:', error);
             throw error;
         }
     },
@@ -327,25 +354,6 @@ export default {
         }
     },
 
-    // Add listing to favorites
-    async addToFavorites(id) {
-        try {
-            const response = await apiClient.post(`/listings/${id}/favorite`);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-
-    // Remove listing from favorites
-    async removeFromFavorites(id) {
-        try {
-            const response = await apiClient.delete(`/listings/${id}/favorite`);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
 
     // Send message to seller
     async sendMessage(messageData) {

@@ -12,6 +12,21 @@ export const useAuthStore = defineStore('auth', {
         // Listings state
         listings: [],
         currentListing: null,
+        filterOptions: {
+            categories: [],
+            conditions: [],
+            locations: []
+        },
+        searchFilters: {
+            name: '',
+            location: '',
+            categories: '',
+            condition: '',
+            min_price: null,
+            max_price: null,
+            page: 1,
+            per_page: 10
+        }
     }),
 
     getters: {
@@ -38,6 +53,20 @@ export const useAuthStore = defineStore('auth', {
         },
         getError(state) {
             return state.error;
+        },
+
+        // Filter options getters
+        getCategories(state) {
+            return state.filterOptions.categories;
+        },
+        getConditions(state) {
+            return state.filterOptions.conditions;
+        },
+        getLocations(state) {
+            return state.filterOptions.locations;
+        },
+        getSearchFilters(state) {
+            return state.searchFilters;
         }
     },
 
@@ -276,6 +305,70 @@ export const useAuthStore = defineStore('auth', {
             } finally {
                 this.loading = false;
             }
+        },
+
+        // Search and filter actions
+        async fetchFilterOptions() {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.getFilterOptions();
+                if (response.success) {
+                    this.filterOptions = response.data;
+                    return response.data;
+                }
+                throw new Error('Failed to fetch filter options');
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to fetch filter options';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async searchListings(filters) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                // Clean up filters - remove empty strings and null values
+                const cleanFilters = Object.fromEntries(
+                    Object.entries(filters).filter(([_, value]) => 
+                        value !== '' && value !== null && value !== undefined
+                    )
+                );
+
+                const response = await api.searchListings(cleanFilters);
+                if (response.success) {
+                    this.listings = response.data;
+                    return response;
+                } else {
+                    throw new Error(response.message || 'Failed to search listings');
+                }
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message || 'Failed to search listings';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        updateSearchFilters(filters) {
+            this.searchFilters = { ...this.searchFilters, ...filters };
+        },
+
+        clearSearchFilters() {
+            this.searchFilters = {
+                name: '',
+                location: '',
+                categories: '',
+                condition: '',
+                min_price: null,
+                max_price: null,
+                page: 1,
+                per_page: 10
+            };
         }
     }
 });
