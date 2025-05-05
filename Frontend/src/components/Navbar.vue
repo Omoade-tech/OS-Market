@@ -16,14 +16,12 @@
             </li>
             
             </template>
-            <!-- <li class="nav-item me-3">
-              <router-link class="nav-link" to="/blog">Blog</router-link>
-            </li> -->
-            <template v-if="isAuthenticated">
+          
+            <!-- <template v-if="isAuthenticated">
               <li v-if="user?.role === 'buyer'" class="nav-item me-3">
                 <router-link class="nav-link" to="/listing">Listing</router-link>
               </li>
-            </template>
+            </template> -->
           </ul>
         </div>
         <div class="navbar-nav ms-auto">
@@ -51,9 +49,9 @@
                 <li v-if="user?.role === 'buyer'">
                   <router-link class="dropdown-item" to="/buyerdashboard">Dashboard</router-link>
                 </li>
-                <li v-if="user?.role === 'buyer'">
+                <!-- <li v-if="user?.role === 'buyer'">
                   <router-link class="dropdown-item" to="/listing">Listing</router-link>
-                </li>
+                </li> -->
                 <li v-if="user?.role === 'buyer'">
                   <router-link class="dropdown-item" to="/profile">Profile</router-link>
                 </li>

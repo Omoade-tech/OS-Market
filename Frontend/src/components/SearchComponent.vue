@@ -39,6 +39,20 @@
           </div>
         </div>
 
+        <!-- Filter by Condition -->
+        <div class="w-25">
+          <select 
+            class="form-select" 
+            v-model="searchFilters.condition"
+            @change="handleSearch"
+          >
+            <option value="">All Conditions</option>
+            <option v-for="condition in conditions" :key="condition" :value="condition">
+              {{ condition }}
+            </option>
+          </select>
+        </div>
+
         <!-- Filter by Category -->
         <div class="w-25">
           <select 
@@ -53,19 +67,7 @@
           </select>
         </div>
 
-        <!-- Filter by Condition -->
-        <div class="w-25">
-          <select 
-            class="form-select" 
-            v-model="searchFilters.condition"
-            @change="handleSearch"
-          >
-            <option value="">All Conditions</option>
-            <option v-for="condition in conditions" :key="condition" :value="condition">
-              {{ condition }}
-            </option>
-          </select>
-        </div>
+        
 
         <!-- Clear Filters Button -->
         <div>
