@@ -16,29 +16,20 @@ class MessageController extends Controller
     {
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string|max:1000',
+            'message' => 'required|string'
         ]);
 
-        try {
-            $message = Message::create([
-                'sender_id' => Auth::id(),
-                'receiver_id' => $request->receiver_id,
-                'message' => $request->message,
-            ]);
+        $message = Message::create([
+            'sender_id' => Auth::id(),
+            'receiver_id' => $request->receiver_id,
+            'message' => $request->message,
+            'read' => false
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Message sent successfully.',
-                'data' => $message,
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to send message.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $message->load('sender:id,name,email')
+        ]);
     }
 
     /**
@@ -46,27 +37,33 @@ class MessageController extends Controller
      */
     public function dashboard()
     {
-        try {
-            $userId = Auth::id();
-            
-            // Get all messages where user is either sender or receiver
-            $messages = Message::where('sender_id', $userId)
-                ->orWhere('receiver_id', $userId)
-                ->with(['sender', 'receiver'])
-                ->orderBy('created_at', 'desc')
-                ->get();
+        $user = Auth::user();
+        
+        // Get all messages where the authenticated user is the receiver
+        $messages = Message::where('receiver_id', $user->id)
+            ->with(['sender' => function($query) {
+                $query->select('id', 'name', 'email');
+            }])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy('sender_id')
+            ->map(function($group) {
+                $lastMessage = $group->first();
+                return [
+                    'id' => $lastMessage->sender_id,
+                    'sender_name' => $lastMessage->sender->name,
+                    'last_message' => $lastMessage->message,
+                    'last_message_at' => $lastMessage->created_at,
+                    'read' => $lastMessage->read,
+                    'unread_count' => $group->where('read', false)->count()
+                ];
+            })
+            ->values();
 
-            return response()->json([
-                'success' => true,
-                'messages' => $messages,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch messages.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'messages' => $messages
+        ]);
     }
 
     /**
@@ -74,30 +71,32 @@ class MessageController extends Controller
      */
     public function conversation($userId)
     {
-        $authId = Auth::id();
+        $user = Auth::user();
+        
+        // Get all messages between the authenticated user and the specified user
+        $messages = Message::where(function($query) use ($user, $userId) {
+                $query->where('sender_id', $user->id)
+                    ->where('receiver_id', $userId);
+            })
+            ->orWhere(function($query) use ($user, $userId) {
+                $query->where('sender_id', $userId)
+                    ->where('receiver_id', $user->id);
+            })
+            ->with(['sender' => function($query) {
+                $query->select('id', 'name', 'email');
+            }])
+            ->orderBy('created_at', 'asc')
+            ->get();
 
-        try {
-            $messages = Message::where(function ($query) use ($authId, $userId) {
-                    $query->where('sender_id', $authId)
-                          ->where('receiver_id', $userId);
-                })
-                ->orWhere(function ($query) use ($authId, $userId) {
-                    $query->where('sender_id', $userId)
-                          ->where('receiver_id', $authId);
-                })
-                ->orderBy('created_at', 'asc')
-                ->get();
+        // Mark messages as read
+        Message::where('sender_id', $userId)
+            ->where('receiver_id', $user->id)
+            ->where('read', false)
+            ->update(['read' => true]);
 
-            return response()->json([
-                'success' => true,
-                'conversation' => $messages,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch conversation.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'conversation' => $messages
+        ]);
     }
 }

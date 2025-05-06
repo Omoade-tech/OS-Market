@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Listing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ListingController extends Controller
@@ -31,15 +33,15 @@ class ListingController extends Controller
         }
     }
 
-    public function userListings($user_id)
-    {
-        try {
-            $listings = Listing::where('user_id', $user_id)->latest()->get();
-            return response()->json(['success' => true, 'data' => $listings], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to fetch user listings.'], 500);
-        }
-    }
+    // public function userListings($user_id)
+    // {
+    //     try {
+    //         $listings = Listing::where('user_id', $user_id)->latest()->get();
+    //         return response()->json(['success' => true, 'data' => $listings], 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['success' => false, 'message' => 'Failed to fetch user listings.'], 500);
+    //     }
+    // }
 
     public function show($id)
     {
@@ -92,42 +94,101 @@ class ListingController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            Log::info('Starting listing update process', ['listing_id' => $id]);
+            Log::info('Raw request data:', $request->all());
+
             $listing = Listing::find($id);
 
             if (!$listing) {
+                Log::error('Listing not found', ['listing_id' => $id]);
                 return response()->json(['success' => false, 'message' => 'Listing not found.'], 404);
             }
 
             if ($listing->user_id !== Auth::id()) {
+                Log::error('Unauthorized update attempt', [
+                    'listing_id' => $id,
+                    'listing_user_id' => $listing->user_id,
+                    'auth_user_id' => Auth::id()
+                ]);
                 return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
             }
 
             $validator = Validator::make($request->all(), [
                 'image' => 'nullable|image|mimes:jpg,jpeg,png',
-                'price' => 'required|numeric',
-                'name' => 'required|string|max:255',
-                'location' => 'required|string|max:255',
-                'description' => 'required|string',
-                'categories' => 'required|string|max:255',
-                'condition' => 'required|in:new,used-good,used-like-new,used-fair',
+                'price' => 'nullable|numeric|min:0',
+                'name' => 'nullable|string|max:255',
+                'location' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'categories' => 'nullable|string|max:255',
+                'condition' => 'nullable|in:new,used-good,used-like-new,used-fair',
             ]);
 
             if ($validator->fails()) {
+                Log::error('Validation failed', ['errors' => $validator->errors()->toArray()]);
                 return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
             }
 
             $data = $validator->validated();
+            Log::info('Validated data:', $data);
 
-            if ($request->hasFile('image')) {
-                $path = $request->file('image')->store('listings', 'public');
-                $data['image'] = str_replace('public/', '', $path);
+            // Only update fields that were provided
+            $updateData = [];
+            foreach ($data as $key => $value) {
+                if ($value !== null && $value !== '') {
+                    $updateData[$key] = $value;
+                }
             }
 
-            $listing->update($data);
+            if ($request->hasFile('image')) {
+                Log::info('Processing new image upload');
+                // Delete old image if it exists
+                if ($listing->image && Storage::disk('public')->exists($listing->image)) {
+                    Storage::disk('public')->delete($listing->image);
+                }
+                $path = $request->file('image')->store('listings', 'public');
+                $updateData['image'] = str_replace('public/', '', $path);
+                Log::info('New image path:', ['path' => $updateData['image']]);
+            }
 
-            return response()->json(['success' => true, 'message' => 'Listing updated successfully.', 'data' => $listing], 200);
+            // Update the listing with only the provided fields
+            if (!empty($updateData)) {
+                $listing->update($updateData);
+                Log::info('Listing updated successfully with data:', $updateData);
+            } else {
+                Log::warning('No data to update - all fields were empty or null');
+            }
+
+            // Refresh the listing to get the latest data
+            $listing->refresh();
+            Log::info('Updated listing data:', $listing->toArray());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Listing updated successfully.',
+                'data' => [
+                    'id' => $listing->id,
+                    'name' => $listing->name,
+                    'description' => $listing->description,
+                    'price' => $listing->price,
+                    'image' => $listing->image ? '/storage/' . $listing->image : null,
+                    'categories' => $listing->categories,
+                    'condition' => $listing->condition,
+                    'status' => $listing->status,
+                    'location' => $listing->location,
+                    'created_at' => $listing->created_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $listing->updated_at->format('Y-m-d H:i:s')
+                ]
+            ], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to update listing.'], 500);
+            Log::error('Error updating listing', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Failed to update listing.', 
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -188,7 +249,6 @@ class ListingController extends Controller
             // Get results with pagination
             $results = $query->latest()->paginate($perPage);
 
-
             // Transform the data to include user information
             $transformedData = collect($results->items())->map(function ($listing) {
                 return [
@@ -227,8 +287,6 @@ class ListingController extends Controller
                 ]
             ], 200);
         } catch (\Exception $e) {
-            
-            
             return response()->json([
                 'success' => false, 
                 'message' => 'Search failed.',
@@ -298,13 +356,14 @@ class ListingController extends Controller
                 ->map(function ($listing) {
                     return [
                         'id' => $listing->id,
-                        'title' => $listing->name,
+                        'name' => $listing->name,
                         'description' => $listing->description,
                         'price' => $listing->price,
                         'image' => $listing->image,
                         'category' => $listing->categories,
                         'condition' => $listing->condition,
                         'status' => $listing->status,
+                        'location' => $listing->location,
                         'created_at' => $listing->created_at->format('Y-m-d H:i:s'),
                         'updated_at' => $listing->updated_at->format('Y-m-d H:i:s')
                     ];

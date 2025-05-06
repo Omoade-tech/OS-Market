@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get API URL from environment variables or use default
-const API_URL = 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -10,7 +10,7 @@ const apiClient = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
-    timeout: 30000
+    withCredentials: true
 });
 
 // Request Interceptor
@@ -107,7 +107,7 @@ export default {
         try {
             ensureToken();
             const response = await apiClient.get('/profile');
-            return response.data.data; // Return the user data directly
+            return response.data.data;
         } catch (error) {
             console.error('Failed to get profile:', error);
             throw error;
@@ -118,68 +118,30 @@ export default {
     async updateUserProfile(profileData) {
         try {
             ensureToken();
-            console.log('API: Raw profile data:', profileData);
-            console.log('API: Image type:', profileData.image?.type);
-            console.log('API: Image instanceof File:', profileData.image instanceof File);
-            console.log('API: Image instanceof Blob:', profileData.image instanceof Blob);
-
             let config = {
                 headers: {
                     'Accept': 'application/json'
                 }
             };
 
-            // If we have an image, use FormData
             if (profileData.image instanceof File) {
                 const formData = new FormData();
-                
-                // Add image with proper file type and name
-                formData.append('image', profileData.image, profileData.image.name);
-                
-                // Add all other fields to FormData
-                const fieldsToExclude = ['id', 'role', 'created_at', 'updated_at'];
+                formData.append('image', profileData.image);
                 Object.keys(profileData).forEach(key => {
-                    if (!fieldsToExclude.includes(key) && profileData[key] !== null && profileData[key] !== undefined) {
-                        // Ensure name and email are always included
-                        if (key === 'name' || key === 'email') {
-                            formData.append(key, profileData[key] || '');
-                        } else if (key !== 'image') {
-                            formData.append(key, profileData[key]);
-                        }
+                    if (key !== 'image' && profileData[key] !== null) {
+                        formData.append(key, profileData[key]);
                     }
                 });
 
-                // Log FormData contents for debugging
-                for (let pair of formData.entries()) {
-                    console.log('FormData entry:', pair[0], pair[1]);
-                }
-
-                // Set the correct headers for file upload
-                config.headers = {
-                    'Accept': 'application/json',
-                    'Content-Type': 'multipart/form-data'
-                };
-
-                console.log('API: Sending request with FormData');
+                config.headers['Content-Type'] = 'multipart/form-data';
                 const response = await apiClient.put('/profile', formData, config);
-                console.log('API: Profile update response:', response.data);
                 return response.data;
             } else {
-                // If no image, send as JSON
-                console.log('API: Sending request with JSON data');
                 const response = await apiClient.put('/profile', profileData, config);
-                console.log('API: Profile update response:', response.data);
                 return response.data;
             }
         } catch (error) {
-            console.error('API: Profile update error:', error.response?.data || error.message);
-            if (error.response?.data?.errors) {
-                // Handle validation errors
-                const errorMessages = Object.entries(error.response.data.errors)
-                    .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-                    .join('\n');
-                throw new Error(errorMessages);
-            }
+            console.error('API: Profile update error:', error);
             throw error;
         }
     },
@@ -189,16 +151,9 @@ export default {
         try {
             ensureToken();
             const response = await apiClient.get('/listings', {
-                params: {
-                    page: page,
-                    per_page: 10
-                }
+                params: { page, per_page: 10 }
             });
-            if (response.data && response.data.success) {
-                return response.data;
-            } else {
-                throw new Error('Invalid response format from server');
-            }
+            return response.data;
         } catch (error) {
             console.error('Failed to fetch listings:', error);
             throw error;
@@ -209,7 +164,6 @@ export default {
     async searchListings(filters) {
         try {
             ensureToken();
-            // Convert filters to query parameters
             const params = new URLSearchParams();
             Object.entries(filters).forEach(([key, value]) => {
                 if (value !== null && value !== undefined && value !== '') {
@@ -217,15 +171,8 @@ export default {
                 }
             });
 
-            const response = await apiClient.get('/listings/search', { 
-                params: params
-            });
-            
-            if (response.data && response.data.success) {
-                return response.data;
-            } else {
-                throw new Error('Invalid response format from server');
-            }
+            const response = await apiClient.get('/listings/search', { params });
+            return response.data;
         } catch (error) {
             console.error('Failed to search listings:', error);
             throw error;
@@ -274,16 +221,12 @@ export default {
             ensureToken();
             const formData = new FormData();
             
-            // Handle images if they exist
-            if (listingData.images) {
-                listingData.images.forEach((image, index) => {
-                    formData.append(`images[${index}]`, image);
-                });
+            if (listingData.image instanceof File) {
+                formData.append('image', listingData.image);
             }
 
-            // Add other listing data
             Object.keys(listingData).forEach(key => {
-                if (key !== 'images' && listingData[key] !== null) {
+                if (key !== 'image' && listingData[key] !== null) {
                     formData.append(key, listingData[key]);
                 }
             });
@@ -306,28 +249,50 @@ export default {
             ensureToken();
             const formData = new FormData();
             
-            // Handle images if they exist
-            if (listingData.images) {
-                listingData.images.forEach((image, index) => {
-                    formData.append(`images[${index}]`, image);
-                });
-            }
-
-            // Add other listing data
-            Object.keys(listingData).forEach(key => {
-                if (key !== 'images' && listingData[key] !== null) {
-                    formData.append(key, listingData[key]);
+            // Add all fields to FormData
+            Object.entries(listingData).forEach(([key, value]) => {
+                if (value !== null && value !== undefined && value !== '') {
+                    if (key === 'image' && value instanceof File) {
+                        formData.append('image', value);
+                    } else if (key === 'price') {
+                        formData.append(key, parseFloat(value));
+                    } else {
+                        formData.append(key, value);
+                    }
                 }
             });
+
+            // Log FormData contents for debugging
+            console.log('FormData contents before sending:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
 
             const response = await apiClient.put(`/listings/${id}`, formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data'
+                    'Content-Type': 'multipart/form-data',
+                    'Accept': 'application/json'
                 }
             });
+            
+            // Log the response for debugging
+            console.log('API Response:', response);
+            
+            if (!response.data) {
+                throw new Error('No response data received from server');
+            }
+            
+            if (!response.data.success) {
+                throw new Error(response.data.message || 'Failed to update listing');
+            }
+            
             return response.data;
         } catch (error) {
-            console.error('Failed to update listing:', error);
+            console.error('API: Failed to update listing:', error);
+            if (error.response?.data?.errors) {
+                console.error('API: Validation errors:', error.response.data.errors);
+                throw new Error(Object.values(error.response.data.errors).flat().join(', '));
+            }
             throw error;
         }
     },
@@ -344,55 +309,50 @@ export default {
         }
     },
 
-    // Get listing details
-    async getListingDetails(id) {
-        try {
-            const response = await apiClient.get(`/listings/${id}`);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-
-    // Send message to seller
-    async sendMessage(messageData) {
-        try {
-            ensureToken();
-            const response = await apiClient.post('/messages/send', {
-                receiver_id: messageData.seller_id,
-                message: messageData.message
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Failed to send message:', error);
-            throw error;
-        }
-    },
-
     // Get seller listings
     async getSellerListings() {
         try {
             ensureToken();
             const response = await apiClient.get('/seller/listings');
-            if (response.data && response.data.success) {
-                return response.data;
-            } else {
-                throw new Error('Invalid response format from server');
-            }
+            return response.data;
         } catch (error) {
             console.error('Failed to fetch seller listings:', error);
             throw error;
         }
     },
 
-    // Delete listing
-    async deleteListing(listingId) {
+    // Messages: Get dashboard messages
+    async getDashboardMessages() {
         try {
             ensureToken();
-            const response = await apiClient.delete(`/listings/${listingId}`);
+            const response = await apiClient.get('/messages/dashboard');
             return response.data;
         } catch (error) {
-            console.error('Failed to delete listing:', error);
+            console.error('Failed to fetch dashboard messages:', error);
+            throw error;
+        }
+    },
+
+    // Messages: Get conversation with user
+    async getConversation(userId) {
+        try {
+            ensureToken();
+            const response = await apiClient.get(`/messages/conversation/${userId}`);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch conversation:', error);
+            throw error;
+        }
+    },
+
+    // Messages: Send message
+    async sendMessage(messageData) {
+        try {
+            ensureToken();
+            const response = await apiClient.post('/messages/send', messageData);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to send message:', error);
             throw error;
         }
     }

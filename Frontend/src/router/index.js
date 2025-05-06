@@ -13,6 +13,7 @@ import ListingDetail from '@/views/ListingDetail.vue'
 import AddListing from '@/views/seller/AddListing.vue'
 import SellerLayout from '@/layouts/SellerLayout.vue'
 import ViewSellerListing from '@/views/seller/ViewSellerListing.vue'
+import Messages from '@/views/seller/Messages.vue'
 
 const routes = [
   {
@@ -93,7 +94,13 @@ const routes = [
         path: 'profile',
         name: 'seller-profile',
         component: Profile
-      }
+      },
+      
+      {
+        path: 'messages',
+        name: 'seller-messages',
+        component: Messages 
+      },
     ]
   },
   {

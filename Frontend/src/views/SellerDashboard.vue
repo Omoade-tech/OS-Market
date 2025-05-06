@@ -1,15 +1,34 @@
 <template>
-  <div class="seller-dashboard">
+  <div class="seller-dashboard" v-if="isAuthenticated">
     <SellerSidebar />
     <div class="main-content">
-      <router-view></router-view>
+      <router-view v-if="$route.name" />
+      <ViewSellerListing v-else />
     </div>
+  </div>
+  <div v-else>
+    <p>Please login to access the seller dashboard</p>
   </div>
 </template>
 
 <script>
+import { computed } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import SellerSidebar from '@/components/SellerSidebar.vue';
+import ViewSellerListing from '@/views/seller/ViewSellerListing.vue';
+
 export default {
-  name: 'SellerDashboard'
+  name: 'SellerDashboard',
+  components: {
+    SellerSidebar,
+    ViewSellerListing
+  },
+  setup() {
+    const authStore = useAuthStore();
+    return {
+      isAuthenticated: computed(() => authStore.isAuthenticated)
+    };
+  }
 }
 </script>
 

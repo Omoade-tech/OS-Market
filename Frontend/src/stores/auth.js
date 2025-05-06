@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import api from '@/services/api.js';
+import axios from 'axios';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -22,11 +23,13 @@ export const useAuthStore = defineStore('auth', {
             location: '',
             categories: '',
             condition: '',
-            min_price: null,
-            max_price: null,
             page: 1,
             per_page: 10
-        }
+        },
+        conversations: [],
+        currentConversation: null,
+        messages: [],
+        unreadCount: 0
     }),
 
     getters: {
@@ -67,6 +70,20 @@ export const useAuthStore = defineStore('auth', {
         },
         getSearchFilters(state) {
             return state.searchFilters;
+        },
+
+        // Messages getters
+        getConversations() {
+            return this.conversations;
+        },
+        getCurrentConversation() {
+            return this.currentConversation;
+        },
+        getMessages() {
+            return this.messages;
+        },
+        getUnreadCount() {
+            return this.unreadCount;
         }
     },
 
@@ -118,6 +135,14 @@ export const useAuthStore = defineStore('auth', {
             });
             this.user = null;
             this.token = null;
+            this.listings = [];
+            this.currentListing = null;
+            this.filterOptions = { categories: [], conditions: [], locations: [] };
+            this.searchFilters = { name: '', location: '', categories: '', condition: '', page: 1, per_page: 10 };
+            this.conversations = [];
+            this.currentConversation = null;
+            this.messages = [];
+            this.unreadCount = 0;
             localStorage.removeItem('user');
             localStorage.removeItem('token');
         },
@@ -256,21 +281,20 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        async updateListing(id, listingData) {
+        async updateListing(id, formData) {
             this.loading = true;
             this.error = null;
-
             try {
-                const response = await api.updateListing(id, listingData);
-
-                if (this.currentListing && this.currentListing.id === id) {
-                    this.currentListing = response;
+                const response = await api.updateListing(id, formData);
+                if (response && response.success) {
+                    // Refresh the listings after successful update
+                    await this.fetchSellerListings();
+                    return response;
                 }
-
-                await this.fetchListings();
-                return response;
+                throw new Error(response?.message || 'Failed to update listing');
             } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to update listing';
+                console.error('Update listing error:', error);
+                this.error = error.response?.data?.message || error.message || 'Failed to update listing';
                 throw error;
             } finally {
                 this.loading = false;
@@ -286,21 +310,6 @@ export const useAuthStore = defineStore('auth', {
                 this.listings = this.listings.filter(listing => listing.id !== id);
             } catch (error) {
                 this.error = error.response?.data?.message || 'Failed to delete listing';
-                throw error;
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        async sendMessage(messageData) {
-            this.loading = true;
-            this.error = null;
-
-            try {
-                const response = await api.sendMessage(messageData);
-                return response;
-            } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to send message';
                 throw error;
             } finally {
                 this.loading = false;
@@ -332,7 +341,6 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                // Clean up filters - remove empty strings and null values
                 const cleanFilters = Object.fromEntries(
                     Object.entries(filters).filter(([_, value]) => 
                         value !== '' && value !== null && value !== undefined
@@ -379,13 +387,26 @@ export const useAuthStore = defineStore('auth', {
             try {
                 const response = await api.getSellerListings();
                 if (response.success) {
-                    this.listings = response.data;
-                    return response.data;
+                    this.listings = response.data.map(listing => ({
+                        id: listing.id,
+                        name: listing.name,
+                        description: listing.description,
+                        price: listing.price,
+                        location: listing.location,
+                        categories: listing.category,
+                        condition: listing.condition,
+                        status: listing.status || 'active',
+                        image: listing.image ? `/storage/${listing.image}` : null,
+                        created_at: listing.created_at,
+                        updated_at: listing.updated_at
+                    }));
+                    return this.listings;
                 } else {
                     throw new Error(response.message || 'Failed to fetch seller listings');
                 }
             } catch (error) {
-                this.error = error.response?.data?.message || error.message || 'Failed to fetch seller listings';
+                this.error = error.message || 'Failed to fetch seller listings';
+                this.listings = [];
                 throw error;
             } finally {
                 this.loading = false;
@@ -398,7 +419,6 @@ export const useAuthStore = defineStore('auth', {
 
             try {
                 const response = await api.deleteListing(listingId);
-                // Remove the deleted listing from the state
                 this.listings = this.listings.filter(listing => listing.id !== listingId);
                 return response;
             } catch (error) {
@@ -407,6 +427,82 @@ export const useAuthStore = defineStore('auth', {
             } finally {
                 this.loading = false;
             }
+        },
+
+        // Messages actions
+        async fetchConversations() {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.getDashboardMessages();
+                if (response.success) {
+                    this.conversations = response.messages;
+                    this.unreadCount = response.unread_count || 0;
+                    return response;
+                }
+                throw new Error('Failed to fetch conversations');
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message || 'Failed to fetch conversations';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async fetchConversation(userId) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.getConversation(userId);
+                if (response.success) {
+                    this.messages = response.conversation;
+                    this.currentConversation = {
+                        id: userId,
+                        messages: response.conversation
+                    };
+                    return response;
+                }
+                throw new Error('Failed to fetch conversation');
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message || 'Failed to fetch conversation';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async sendMessage(messageData) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.sendMessage(messageData);
+                if (response.success) {
+                    this.messages.push(response.data);
+                    // Update the last message in conversations
+                    const conversationIndex = this.conversations.findIndex(
+                        conv => conv.id === messageData.receiver_id
+                    );
+                    if (conversationIndex !== -1) {
+                        this.conversations[conversationIndex].last_message = messageData.message;
+                        this.conversations[conversationIndex].last_message_at = new Date().toISOString();
+                    }
+                    return response;
+                }
+                throw new Error('Failed to send message');
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message || 'Failed to send message';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        clearCurrentConversation() {
+            this.currentConversation = null;
+            this.messages = [];
         }
     }
 });

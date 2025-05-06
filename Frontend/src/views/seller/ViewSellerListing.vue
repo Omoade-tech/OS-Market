@@ -7,6 +7,10 @@
       </router-link>
     </div>
 
+    <div v-if="error" class="alert alert-danger">
+      {{ error }}
+    </div>
+
     <div v-if="loading" class="loading">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
@@ -20,26 +24,109 @@
       </router-link>
     </div>
 
-    <div v-else class="listings-grid">
+    <div v-else class="listings-grid w-100">
       <div v-for="listing in listings" :key="listing.id" class="listing-card">
         <div class="listing-image">
-          <img :src="listing.image" :alt="listing.title">
+          <img :src="listing.image || '/images/placeholder.jpg'" :alt="listing.name">
         </div>
         <div class="listing-info">
-          <h3>{{ listing.title }}</h3>
+          <h3>{{ listing.name }}</h3>
           <p class="price">${{ listing.price }}</p>
           <p class="description">{{ listing.description }}</p>
           <div class="listing-meta">
-            <span class="category">{{ listing.category }}</span>
-            <span class="condition">{{ listing.condition }}</span>
-            <span class="status" :class="listing.status">{{ listing.status }}</span>
+            <span class="category">{{ formatCategory(listing.categories) }}</span>
+            <span class="condition">{{ formatCondition(listing.condition) }}</span>
+            <span class="status" :class="listing.status">{{ formatStatus(listing.status) }}</span>
+            <span class="location">{{ listing.location }}</span>
           </div>
           <div class="listing-actions">
-            <router-link :to="'/seller/edit-listing/' + listing.id" class="btn btn-sm btn-outline-primary">
+            <button @click="openEditModal(listing)" class="btn btn-sm btn-outline-primary">
               <i class="fas fa-edit"></i> Edit
-            </router-link>
+            </button>
             <button @click="deleteListing(listing.id)" class="btn btn-sm btn-outline-danger">
               <i class="fas fa-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Listing Modal -->
+    <div class="modal fade" id="editListingModal" tabindex="-1" aria-labelledby="editListingModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editListingModalLabel">Edit Listing</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="updateListing" class="edit-listing-form">
+              <div class="mb-3">
+                <label for="name" class="form-label">Title</label>
+                <input type="text" class="form-control" id="name" v-model="editingListing.name" required>
+              </div>
+              
+              <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" v-model="editingListing.description" rows="3" required></textarea>
+              </div>
+              
+              <div class="mb-3">
+                <label for="price" class="form-label">Price</label>
+                <input type="number" class="form-control" id="price" v-model="editingListing.price" required step="0.01" min="0">
+              </div>
+              
+              <div class="mb-3">
+                <label for="location" class="form-label">Location</label>
+                <input type="text" class="form-control" id="location" v-model="editingListing.location" required>
+              </div>
+              
+              <div class="mb-3">
+                <label for="categories" class="form-label">Category</label>
+                <select class="form-select" id="categories" v-model="editingListing.categories" required>
+                  <option value="electronics">Electronics</option>
+                  <option value="fashion">Fashion</option>
+                  <option value="home-garden">Home & Garden</option>
+                  <option value="vehicles">Vehicles</option>
+                  <option value="real-estate">Real Estate</option>
+                  <option value="jobs">Jobs</option>
+                  <option value="services">Services</option>
+                  <option value="education">Education</option>
+                  <option value="health-beauty">Health & Beauty</option>
+                  <option value="sports-fitness">Sports & Fitness</option>
+                  <option value="pets">Pets</option>
+                  <option value="food-drinks">Food & Drinks</option>
+                  <option value="art-collectibles">Art & Collectibles</option>
+                  <option value="books-music-movies">Books, Music & Movies</option>
+                  <option value="business-equipment">Business Equipment</option>
+                </select>
+              </div>
+              
+              <div class="mb-3">
+                <label for="condition" class="form-label">Condition</label>
+                <select class="form-select" id="condition" v-model="editingListing.condition" required>
+                  <option value="new">New</option>
+                  <option value="used-like-new">Used - Like New</option>
+                  <option value="used-good">Used - Good</option>
+                  <option value="used-fair">Used - Fair</option>
+                </select>
+              </div>
+              
+              <div class="mb-3">
+                <label for="image" class="form-label">Image</label>
+                <input type="file" class="form-control" id="image" @change="handleImageChange" accept="image/*">
+                <small class="text-muted">Leave empty to keep current image</small>
+                <div v-if="imagePreview || originalListing?.image" class="mt-2">
+                  <img :src="imagePreview || originalListing?.image" alt="Preview" style="max-width: 200px; max-height: 200px;">
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" @click="updateListing" :disabled="updating">
+              <span v-if="updating" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              {{ updating ? 'Updating...' : 'Update Listing' }}
             </button>
           </div>
         </div>
@@ -51,50 +138,205 @@
 <script>
 import { useAuthStore } from '@/stores/auth.js'
 import { useToast } from 'vue-toastification'
+import { Modal } from 'bootstrap'
 
 export default {
   name: 'ViewSellerListing',
   data() {
     return {
       loading: false,
-      listings: []
+      error: null,
+      listings: [],
+      editingListing: {
+        id: null,
+        name: '',
+        description: '',
+        price: '',
+        location: '',
+        categories: '',
+        condition: '',
+        image: null
+      },
+      originalListing: null,
+      updating: false,
+      editModal: null,
+      imagePreview: null
     }
   },
   methods: {
+    formatText(text, separator = /[-_]/) {
+      if (!text) return 'Unknown';
+      return text.split(separator)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    },
+    formatCategory(category) {
+      return this.formatText(category);
+    },
+    formatCondition(condition) {
+      return this.formatText(condition, '-');
+    },
+    formatStatus(status) {
+      if (!status) return 'Active';
+      return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    },
     async fetchListings() {
-      this.loading = true
+      this.loading = true;
+      this.error = null;
       try {
-        const authStore = useAuthStore()
-       
-        const response = await authStore.fetchSellerListings()
-      
-        this.listings = authStore.listings
-        console.log('Updated listings:', this.listings)
+        const authStore = useAuthStore();
+        await authStore.fetchSellerListings();
+        this.listings = authStore.listings;
       } catch (error) {
-
-        useToast().error('Failed to load listings: ' + (error.response?.data?.message || error.message))
+        this.error = error.message;
+        useToast().error('Failed to load listings: ' + error.message);
       } finally {
-        this.loading = false
+        this.loading = false;
       }
+    },
+    openEditModal(listing) {
+      // Create a deep copy of the listing to avoid direct reference
+      this.originalListing = JSON.parse(JSON.stringify(listing));
+      this.editingListing = {
+        id: listing.id,
+        name: listing.name || '',
+        description: listing.description || '',
+        price: listing.price ? parseFloat(listing.price) : '',
+        location: listing.location || '',
+        categories: listing.categories || '',
+        condition: listing.condition || '',
+        image: null
+      };
+      
+      // Initialize Bootstrap modal if not already initialized
+      if (!this.editModal) {
+        const modalEl = document.getElementById('editListingModal');
+        this.editModal = new Modal(modalEl);
+      }
+      this.editModal.show();
+    },
+    handleImageChange(event) {
+      this.editingListing.image = event.target.files[0];
+      if (this.editingListing.image) {
+        this.imagePreview = URL.createObjectURL(this.editingListing.image);
+      } else {
+        this.imagePreview = null;
+      }
+    },
+    async updateListing() {
+      this.updating = true;
+      try {
+        console.log('Starting update with data:', this.editingListing);
+        
+        if (!this.editingListing.price || this.editingListing.price <= 0) {
+          useToast().error('Price must be greater than 0');
+          return;
+        }
+
+        const authStore = useAuthStore();
+        const formData = new FormData();
+        
+        // Add all fields to FormData, ensuring they are properly typed
+        const fields = {
+          name: String(this.editingListing.name),
+          description: String(this.editingListing.description),
+          price: parseFloat(this.editingListing.price),
+          location: String(this.editingListing.location),
+          categories: String(this.editingListing.categories),
+          condition: String(this.editingListing.condition)
+        };
+
+        // Append all fields to FormData, checking for changes
+        Object.entries(fields).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== '') {
+            formData.append(key, value);
+          }
+        });
+
+        // Only append image if it's a new file
+        if (this.editingListing.image instanceof File) {
+          formData.append('image', this.editingListing.image);
+        }
+
+        // Log the FormData contents for debugging
+        console.log('FormData contents:');
+        for (let pair of formData.entries()) {
+          console.log(pair[0] + ': ' + pair[1]);
+        }
+
+        const response = await authStore.updateListing(this.editingListing.id, formData);
+        console.log('Update response:', response);
+
+        if (response && response.success) {
+          await authStore.fetchSellerListings();
+          this.listings = authStore.listings;
+          
+          // Close modal and reset form
+          if (this.editModal) {
+            this.editModal.hide();
+          }
+          this.resetForm();
+          useToast().success('Listing updated successfully');
+        } else {
+          throw new Error(response?.message || 'Update failed: No response data');
+        }
+      } catch (error) {
+        console.error('Update error:', error);
+        if (error.response) {
+          const { status, data } = error.response;
+          if (status === 422 && data.errors) {
+            // Handle validation errors
+            Object.entries(data.errors).forEach(([field, messages]) => {
+              useToast().error(`${field}: ${messages.join(', ')}`);
+            });
+          } else if (status === 403) {
+            useToast().error('You are not authorized to update this listing');
+          } else if (status === 404) {
+            useToast().error('Listing not found');
+          } else {
+            useToast().error(data.message || 'Failed to update listing');
+          }
+        } else {
+          useToast().error(error.message || 'Network error: Please check your connection');
+        }
+      } finally {
+        this.updating = false;
+      }
+    },
+    resetForm() {
+      this.editingListing = {
+        id: null,
+        name: '',
+        description: '',
+        price: '',
+        location: '',
+        categories: '',
+        condition: '',
+        image: null
+      };
+      this.originalListing = null;
+      this.imagePreview = null;
     },
     async deleteListing(listingId) {
       if (!confirm('Are you sure you want to delete this listing?')) {
-        return
+        return;
       }
 
       try {
-        const authStore = useAuthStore()
-        await authStore.deleteListing(listingId)
-        this.listings = authStore.listings
-        useToast().success('Listing deleted successfully')
+        const authStore = useAuthStore();
+        await authStore.deleteListing(listingId);
+        this.listings = authStore.listings;
+        useToast().success('Listing deleted successfully');
       } catch (error) {
-        console.error('Error deleting listing:', error)
-        useToast().error('Failed to delete listing')
+        useToast().error('Failed to delete listing');
       }
     }
   },
-  created() {
-    this.fetchListings()
+  mounted() {
+    document.getElementById('editListingModal').addEventListener('hidden.bs.modal', () => {
+      this.resetForm();
+    });
+    this.fetchListings();
   }
 }
 </script>
@@ -208,21 +450,33 @@ export default {
 .category {
   background-color: #e9ecef;
   color: #495057;
+  text-transform: capitalize;
 }
 
 .condition {
   background-color: #e3f2fd;
   color: #1976d2;
+  text-transform: capitalize;
 }
 
 .status {
   background-color: #d4edda;
   color: #155724;
+  text-transform: capitalize;
 }
 
 .status.inactive {
   background-color: #f8d7da;
   color: #721c24;
+}
+
+.location {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-transform: capitalize;
 }
 
 .listing-actions {
@@ -237,6 +491,10 @@ export default {
   gap: 5px;
 }
 
+.edit-listing-form {
+  max-width: 100%;
+}
+
 @media (max-width: 768px) {
   .header {
     flex-direction: column;
@@ -248,4 +506,4 @@ export default {
     grid-template-columns: 1fr;
   }
 }
-</style> 
+</style>

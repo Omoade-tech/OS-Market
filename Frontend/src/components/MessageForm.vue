@@ -62,30 +62,30 @@ export default {
 
   methods: {
     async sendMessage() {
+      if (!this.message.content.trim()) {
+        this.toast.error('Please enter a message');
+        return;
+      }
+
       this.loading = true;
 
       try {
         const response = await this.authStore.sendMessage({
+          receiver_id: this.sellerId,
           listing_id: this.listingId,
-          seller_id: this.sellerId,
-          message: this.message.content
+          message: this.message.content.trim()
         });
 
         if (response.success) {
           this.message.content = '';
-          this.toast.success('Message sent successfully!', {
-            timeout: 3000,
-          });
-          // Emit success event to parent
+          this.toast.success('Message sent successfully!');
           this.$emit('message-sent');
         } else {
           throw new Error(response.message || 'Failed to send message');
         }
       } catch (error) {
         console.error('Error sending message:', error);
-        this.toast.error(error.response?.data?.message || error.message || 'Failed to send message', {
-          timeout: 5000,
-        });
+        this.toast.error(error.response?.data?.message || error.message || 'Failed to send message');
       } finally {
         this.loading = false;
       }

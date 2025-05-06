@@ -79,12 +79,18 @@
 <script>
 import { useAuthStore } from '@/stores/auth.js';
 import MessageForm from '@/components/MessageForm.vue';
+import { useToast } from 'vue-toastification';
 
 export default {
   name: 'ListingDetail',
   
   components: {
     MessageForm
+  },
+  
+  setup() {
+    const toast = useToast();
+    return { toast };
   },
   
   data() {
@@ -100,7 +106,6 @@ export default {
 
   computed: {
     listing() {
-      console.log('Computed listing:', this.listingData || this.authStore.getCurrentListing);
       return this.listingData || this.authStore.getCurrentListing;
     },
     isLoading() {
@@ -117,9 +122,7 @@ export default {
       this.error = null;
       
       try {
-        console.log('Fetching listing details for ID:', id);
         const response = await this.authStore.fetchListingById(id);
-        console.log('API Response:', response);
         if (response.success && response.data) {
           this.listingData = response.data;
         } else {
@@ -128,6 +131,7 @@ export default {
       } catch (error) {
         console.error('Error fetching listing details:', error);
         this.error = error.response?.data?.message || 'Failed to fetch listing details';
+        this.toast.error(this.error);
       } finally {
         this.loading = false;
       }
@@ -135,16 +139,13 @@ export default {
 
     getImageUrl(image) {
       if (!image) {
-        console.log('No image provided, using fallback');
         return 'https://placehold.co/640x480/004477/FFFFFF?text=No+Image';
       }
       
-      // Check if it's a full URL
       if (image.startsWith('http')) {
         return image;
       }
       
-      // If it's a relative path, prepend the API URL
       const baseUrl = 'http://localhost:8000';
       return `${baseUrl}${image}`;
     },
@@ -155,13 +156,12 @@ export default {
 
     handleMessageSent() {
       this.showMessageForm = false;
-      // You can add any additional logic here after message is sent
+      this.toast.success('Message sent successfully!');
     }
   },
 
   mounted() {
     const listingId = this.$route.params.id;
-    console.log('Mounted with listing ID:', listingId);
     if (listingId) {
       this.fetchListingDetails(listingId);
     }
