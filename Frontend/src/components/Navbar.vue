@@ -44,7 +44,7 @@
                   <router-link class="dropdown-item" :to="'/seller/dashboard'">Dashboard</router-link>
                 </li>
                 <li v-if="user?.role === 'seller'">
-                  <router-link class="dropdown-item" to="/profile">Profile</router-link>
+                  <!-- <router-link class="dropdown-item" to="/profile">Profile</router-link> -->
                 </li>
                 <li v-if="user?.role === 'buyer'">
                   <router-link class="dropdown-item" to="/buyerdashboard">Dashboard</router-link>

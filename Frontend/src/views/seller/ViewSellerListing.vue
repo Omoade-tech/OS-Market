@@ -236,69 +236,50 @@ export default {
         const authStore = useAuthStore();
         const formData = new FormData();
         
-        // Add all fields to FormData, ensuring they are properly typed
-        const fields = {
-          name: String(this.editingListing.name),
-          description: String(this.editingListing.description),
-          price: parseFloat(this.editingListing.price),
-          location: String(this.editingListing.location),
-          categories: String(this.editingListing.categories),
-          condition: String(this.editingListing.condition)
-        };
-
-        // Append all fields to FormData, checking for changes
-        Object.entries(fields).forEach(([key, value]) => {
-          if (value !== null && value !== undefined && value !== '') {
-            formData.append(key, value);
-          }
-        });
-
-        // Only append image if it's a new file
+        // Add all fields to FormData
+        formData.append('name', this.editingListing.name);
+        formData.append('description', this.editingListing.description);
+        formData.append('price', this.editingListing.price);
+        formData.append('location', this.editingListing.location);
+        formData.append('categories', this.editingListing.categories);
+        formData.append('condition', this.editingListing.condition);
+        
+        // Only append image if it's been changed
         if (this.editingListing.image instanceof File) {
           formData.append('image', this.editingListing.image);
         }
 
-        // Log the FormData contents for debugging
-        console.log('FormData contents:');
-        for (let pair of formData.entries()) {
-          console.log(pair[0] + ': ' + pair[1]);
-        }
+        // Add _method for Laravel to handle PUT request
+        formData.append('_method', 'PUT');
 
         const response = await authStore.updateListing(this.editingListing.id, formData);
-        console.log('Update response:', response);
-
-        if (response && response.success) {
-          await authStore.fetchSellerListings();
-          this.listings = authStore.listings;
-          
-          // Close modal and reset form
-          if (this.editModal) {
-            this.editModal.hide();
+        
+        if (response.success) {
+          // Update the listing in the local state
+          const index = this.listings.findIndex(l => l.id === this.editingListing.id);
+          if (index !== -1) {
+            this.listings[index] = response.data;
           }
-          this.resetForm();
+          
           useToast().success('Listing updated successfully');
+          this.editModal.hide();
+          this.imagePreview = null;
+          this.editingListing = {
+            id: null,
+            name: '',
+            description: '',
+            price: '',
+            location: '',
+            categories: '',
+            condition: '',
+            image: null
+          };
         } else {
-          throw new Error(response?.message || 'Update failed: No response data');
+          throw new Error(response.message || 'Failed to update listing');
         }
       } catch (error) {
-        console.error('Update error:', error);
-        if (error.response) {
-          const { status, data } = error.response;
-          if (status === 422 && data.errors) {
-            // Handle validation errors
-            Object.entries(data.errors).forEach(([field, messages]) => {
-              useToast().error(`${field}: ${messages.join(', ')}`);
-            });
-          } else if (status === 403) {
-            useToast().error('You are not authorized to update this listing');
-          } else if (status === 404) {
-            useToast().error('Listing not found');
-          } else {
-            useToast().error(data.message || 'Failed to update listing');
-          }
-        } else {
-          useToast().error(error.message || 'Network error: Please check your connection');
-        }
+        console.error('Error updating listing:', error);
+        useToast().error(error.response?.data?.message || error.message || 'Failed to update listing');
       } finally {
         this.updating = false;
       }

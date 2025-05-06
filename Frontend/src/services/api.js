@@ -247,52 +247,15 @@ export default {
     async updateListing(id, listingData) {
         try {
             ensureToken();
-            const formData = new FormData();
-            
-            // Add all fields to FormData
-            Object.entries(listingData).forEach(([key, value]) => {
-                if (value !== null && value !== undefined && value !== '') {
-                    if (key === 'image' && value instanceof File) {
-                        formData.append('image', value);
-                    } else if (key === 'price') {
-                        formData.append(key, parseFloat(value));
-                    } else {
-                        formData.append(key, value);
-                    }
-                }
-            });
-
-            // Log FormData contents for debugging
-            console.log('FormData contents before sending:');
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
-
-            const response = await apiClient.put(`/listings/${id}`, formData, {
+            const response = await apiClient.post(`/listings/${id}`, listingData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Accept': 'application/json'
                 }
             });
-            
-            // Log the response for debugging
-            console.log('API Response:', response);
-            
-            if (!response.data) {
-                throw new Error('No response data received from server');
-            }
-            
-            if (!response.data.success) {
-                throw new Error(response.data.message || 'Failed to update listing');
-            }
-            
             return response.data;
         } catch (error) {
-            console.error('API: Failed to update listing:', error);
-            if (error.response?.data?.errors) {
-                console.error('API: Validation errors:', error.response.data.errors);
-                throw new Error(Object.values(error.response.data.errors).flat().join(', '));
-            }
+            console.error('Failed to update listing:', error);
             throw error;
         }
     },

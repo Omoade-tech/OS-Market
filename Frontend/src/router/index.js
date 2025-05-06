@@ -76,6 +76,10 @@ const routes = [
     },
     children: [
       {
+        path: '',
+        redirect: { name: 'view-seller-listings' }
+      },
+      {
         path: 'dashboard',
         name: 'sellerdashboard',
         component: SellerDashboard

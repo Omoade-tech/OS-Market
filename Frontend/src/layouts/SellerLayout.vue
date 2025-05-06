@@ -22,12 +22,12 @@ export default {
 .seller-layout {
   display: flex;
   min-height: 100vh;
-  margin-top: 60px; /* Account for fixed navbar */
+  margin-top: 60px; 
 }
 
 .main-content {
   flex: 1;
-  margin-left: 250px; /* Same as sidebar width */
+  margin-left: 250px; 
   padding: 20px;
   background-color: #f8f9fa;
   min-height: calc(100vh - 60px);

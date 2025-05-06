@@ -284,16 +284,19 @@ export const useAuthStore = defineStore('auth', {
         async updateListing(id, formData) {
             this.loading = true;
             this.error = null;
+
             try {
                 const response = await api.updateListing(id, formData);
-                if (response && response.success) {
-                    // Refresh the listings after successful update
-                    await this.fetchSellerListings();
+                if (response.success) {
+                    // Update the listing in the local state
+                    const index = this.listings.findIndex(listing => listing.id === id);
+                    if (index !== -1) {
+                        this.listings[index] = response.data;
+                    }
                     return response;
                 }
-                throw new Error(response?.message || 'Failed to update listing');
+                throw new Error(response.message || 'Failed to update listing');
             } catch (error) {
-                console.error('Update listing error:', error);
                 this.error = error.response?.data?.message || error.message || 'Failed to update listing';
                 throw error;
             } finally {

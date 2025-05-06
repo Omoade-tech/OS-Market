@@ -110,7 +110,7 @@
               await this.router.push('/admindashboard');
               break;
             case 'seller':
-              await this.router.push('/sellerdashboard');
+              await this.router.push('/seller/dashboard');
               break;
             case 'buyer':
               await this.router.push('/buyerdashboard');
