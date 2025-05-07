@@ -252,6 +252,7 @@ class ListingController extends Controller
                     'categories' => $listing->categories,
                     'condition' => $listing->condition,
                     'image' => $listing->image,
+                    'image_url' => $listing->image_url,
                     'created_at' => $listing->created_at,
                     'user' => $listing->user ? [
                         'id' => $listing->user->id,
@@ -352,6 +353,7 @@ class ListingController extends Controller
                         'description' => $listing->description,
                         'price' => $listing->price,
                         'image' => $listing->image,
+                        'image_url' => $listing->image_url,
                         'category' => $listing->categories,
                         'condition' => $listing->condition,
                         'status' => $listing->status,
