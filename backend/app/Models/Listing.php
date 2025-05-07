@@ -25,19 +25,22 @@ class Listing extends Model
     public function getImageUrlAttribute()
     {
         if ($this->image) {
-            // If the image path already starts with http, return it as is
+            // If the image path already starts with http, return it as is (for faker images)
             if (strpos($this->image, 'http') === 0) {
                 return $this->image;
             }
             
-            // Ensure the image path doesn't start with a slash
+            // For storage images, ensure proper URL construction
             $imagePath = ltrim($this->image, '/');
-            
-            // Get the base URL from config
             $baseUrl = rtrim(config('app.url'), '/');
             
-            // Return the full URL
-            return "{$baseUrl}/storage/{$imagePath}";
+            // Check if the image exists in storage
+            if (file_exists(storage_path('app/public/' . $imagePath))) {
+                return "{$baseUrl}/storage/{$imagePath}";
+            }
+            
+            // If image doesn't exist in storage, return null
+            return null;
         }
         return null;
     }

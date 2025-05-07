@@ -53,6 +53,7 @@
                   <img 
                     v-if="listing.image_url" 
                     :src="listing.image_url" 
+                    :data-raw-image="listing.image"
                     class="card-img-top" 
                     :alt="listing.name"
                     @error="handleImageError"
@@ -244,7 +245,12 @@ export default {
     },
 
     handleImageError(event) {
-      event.target.src = 'https://placehold.co/640x480/004477/FFFFFF?text=Image+Not+Available';
+      // Try to use the raw image path if image_url fails
+      if (event.target.src !== event.target.dataset.rawImage) {
+        event.target.src = event.target.dataset.rawImage || 'https://placehold.co/640x480/004477/FFFFFF?text=Image+Not+Available';
+      } else {
+        event.target.src = 'https://placehold.co/640x480/004477/FFFFFF?text=Image+Not+Available';
+      }
     }
   },
 

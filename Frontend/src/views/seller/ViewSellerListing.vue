@@ -27,7 +27,7 @@
     <div v-else class="listings-grid w-100">
       <div v-for="listing in listings" :key="listing.id" class="listing-card">
         <div class="listing-image">
-          <img :src="listing.image || '/images/placeholder.jpg'" :alt="listing.name">
+          <img :src="listing.image ? `${apiUrl}/storage/${listing.image}` : '/images/placeholder.jpg'" :alt="listing.name">
         </div>
         <div class="listing-info">
           <h3>{{ listing.name }}</h3>
@@ -141,20 +141,26 @@ import { useToast } from 'vue-toastification'
 import { Modal } from 'bootstrap'
 
 export default {
-  name: 'ViewSellerListing',
+  setup() {
+    const auth = useAuthStore()
+    const toast = useToast()
+    return { auth, toast }
+  },
   data() {
     return {
-      loading: false,
-      error: null,
+      apiUrl: import.meta.env.VITE_API_URL,
       listings: [],
+      loading: true,
+      error: null,
       editingListing: {
         id: null,
         name: '',
         description: '',
-        price: '',
+        price: 0,
         location: '',
         categories: '',
         condition: '',
+        status: '',
         image: null
       },
       originalListing: null,

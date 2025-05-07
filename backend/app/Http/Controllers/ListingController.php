@@ -33,15 +33,7 @@ class ListingController extends Controller
         }
     }
 
-    // public function userListings($user_id)
-    // {
-    //     try {
-    //         $listings = Listing::where('user_id', $user_id)->latest()->get();
-    //         return response()->json(['success' => true, 'data' => $listings], 200);
-    //     } catch (\Exception $e) {
-    //         return response()->json(['success' => false, 'message' => 'Failed to fetch user listings.'], 500);
-    //     }
-    // }
+
 
     public function show($id)
     {
