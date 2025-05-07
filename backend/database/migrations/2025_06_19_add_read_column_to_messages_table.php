@@ -8,19 +8,19 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('messages', function (Blueprint $table) {
-            if (!Schema::hasColumn('messages', 'read')) {
+        if (!Schema::hasColumn('messages', 'read')) {
+            Schema::table('messages', function (Blueprint $table) {
                 $table->boolean('read')->default(false)->after('message');
-            }
-        });
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('messages', function (Blueprint $table) {
-            if (Schema::hasColumn('messages', 'read')) {
+        if (Schema::hasColumn('messages', 'read')) {
+            Schema::table('messages', function (Blueprint $table) {
                 $table->dropColumn('read');
-            }
-        });
+            });
+        }
     }
 }; 

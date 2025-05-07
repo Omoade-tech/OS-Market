@@ -1,5 +1,5 @@
 <template>
-  <div class="listing-detail">
+  <div class="listing-detail mt-5">
     <div v-if="isLoading" class="loading">
       <div class="spinner"></div>
     </div>

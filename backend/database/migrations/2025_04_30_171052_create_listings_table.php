@@ -22,6 +22,7 @@ return new class extends Migration
             $table->enum('categories', [
                 'electronics',
                 'fashion',
+                'phones-gadgets',
                 'home-garden',
                 'vehicles',
                 'real-estate',

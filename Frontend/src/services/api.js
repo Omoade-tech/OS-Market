@@ -219,21 +219,11 @@ export default {
     async createListing(listingData) {
         try {
             ensureToken();
-            const formData = new FormData();
             
-            if (listingData.image instanceof File) {
-                formData.append('image', listingData.image);
-            }
-
-            Object.keys(listingData).forEach(key => {
-                if (key !== 'image' && listingData[key] !== null) {
-                    formData.append(key, listingData[key]);
-                }
-            });
-
-            const response = await apiClient.post('/listings', formData, {
+            const response = await apiClient.post('/listings', listingData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data'
+                    'Content-Type': 'multipart/form-data',
+                    'Accept': 'application/json'
                 }
             });
             return response.data;

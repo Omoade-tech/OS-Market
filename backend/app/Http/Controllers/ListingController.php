@@ -297,6 +297,7 @@ class ListingController extends Controller
             $categories = [
                 'electronics',
                 'fashion',
+                'phones-gadgets',
                 'home-garden',
                 'vehicles',
                 'real-estate',

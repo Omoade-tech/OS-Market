@@ -25,7 +25,7 @@ class Listing extends Model
     public function getImageUrlAttribute()
     {
         if ($this->image) {
-            // If the image path already starts with http, return it as is (for faker images)
+            // If the image path starts with http, return it as is (for picsum.photos URLs)
             if (strpos($this->image, 'http') === 0) {
                 return $this->image;
             }
@@ -34,13 +34,9 @@ class Listing extends Model
             $imagePath = ltrim($this->image, '/');
             $baseUrl = rtrim(config('app.url'), '/');
             
-            // Check if the image exists in storage
-            if (file_exists(storage_path('app/public/' . $imagePath))) {
-                return "{$baseUrl}/storage/{$imagePath}";
-            }
-            
-            // If image doesn't exist in storage, return null
-            return null;
+            // Return the storage URL without checking file existence
+            // This is more efficient and handles both storage and faker images
+            return "{$baseUrl}/storage/{$imagePath}";
         }
         return null;
     }

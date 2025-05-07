@@ -34,15 +34,19 @@
 
           <div class="mb-3">
             <label for="price" class="form-label">Price</label>
-            <input 
-              type="number" 
-              class="form-control" 
-              id="price" 
-              v-model="form.price" 
-              step="0.01" 
-              :class="{'is-invalid': errors.price}"
-              required
-            >
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="price" 
+                v-model="form.price" 
+                step="0.01" 
+                min="0"
+                :class="{'is-invalid': errors.price}"
+                required
+              >
+            </div>
             <div class="invalid-feedback" v-if="errors.price">{{ errors.price[0] }}</div>
           </div>
 
@@ -58,6 +62,7 @@
               <option value="">Select a category</option>
               <option value="electronics">Electronics</option>
               <option value="fashion">Fashion</option>
+              <option value="phones-gadgets">Phones & Gadgets</option>
               <option value="home-garden">Home & Garden</option>
               <option value="vehicles">Vehicles</option>
               <option value="real-estate">Real Estate</option>
@@ -107,17 +112,17 @@
           </div>
 
           <div class="mb-3">
-            <label for="images" class="form-label">Images</label>
+            <label for="image" class="form-label">Image</label>
             <input 
               type="file" 
               class="form-control" 
-              id="images" 
-              multiple 
+              id="image" 
               @change="handleImageUpload"
-              accept="image/*"
-              :class="{'is-invalid': errors.images}"
+              accept="image/jpeg,image/png,image/jpg"
+              :class="{'is-invalid': errors.image}"
             >
-            <div class="invalid-feedback" v-if="errors.images">{{ errors.images[0] }}</div>
+            <div class="invalid-feedback" v-if="errors.image">{{ errors.image[0] }}</div>
+            <small class="form-text text-muted">Accepted formats: JPG, JPEG, PNG</small>
           </div>
 
           <button type="submit" class="btn btn-primary" :disabled="loading">
@@ -151,7 +156,7 @@ export default {
         categories: '',
         condition: '',
         location: '',
-        images: []
+        image: null
       },
       errors: {},
       loading: false
@@ -159,21 +164,107 @@ export default {
   },
   methods: {
     handleImageUpload(event) {
-      this.form.images = Array.from(event.target.files);
-      this.errors.images = null; 
+      const file = event.target.files[0];
+      if (file) {
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!validTypes.includes(file.type)) {
+          this.errors.image = ['Please upload a valid image file (JPG, JPEG, or PNG)'];
+          event.target.value = '';
+          return;
+        }
+        
+        // Validate file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        if (file.size > maxSize) {
+          this.errors.image = ['Image size should not exceed 5MB'];
+          event.target.value = '';
+          return;
+        }
+
+        this.form.image = file;
+        this.errors.image = null;
+      }
+    },
+    validateForm() {
+      const errors = {};
+      
+      if (!this.form.name.trim()) {
+        errors.name = ['Name is required'];
+      }
+      
+      if (!this.form.description.trim()) {
+        errors.description = ['Description is required'];
+      }
+      
+      if (!this.form.price || isNaN(this.form.price) || parseFloat(this.form.price) <= 0) {
+        errors.price = ['Please enter a valid price'];
+      }
+      
+      if (!this.form.categories) {
+        errors.categories = ['Please select a category'];
+      }
+      
+      if (!this.form.condition) {
+        errors.condition = ['Please select a condition'];
+      }
+      
+      if (!this.form.location.trim()) {
+        errors.location = ['Location is required'];
+      }
+
+      return errors;
     },
     async submitListing() {
       try {
-        this.loading = true;
-        this.errors = {}; 
+        // Clear previous errors
+        this.errors = {};
         
-        // Convert price to number if it's a string
-        const formData = {
-          ...this.form,
-          price: parseFloat(this.form.price)
-        };
+        // Validate form
+        const validationErrors = this.validateForm();
+        if (Object.keys(validationErrors).length > 0) {
+          this.errors = validationErrors;
+          this.toast.error('Please correct the errors in the form.', {
+            timeout: 5000,
+          });
+          return;
+        }
 
-        await this.authStore.createListing(formData);
+        this.loading = true;
+        
+        // Create FormData object
+        const formData = new FormData();
+        
+        // Log the form data before sending
+        console.log('Form data before sending:', {
+          name: this.form.name,
+          description: this.form.description,
+          price: this.form.price,
+          categories: this.form.categories,
+          condition: this.form.condition,
+          location: this.form.location,
+          hasImage: !!this.form.image
+        });
+
+        // Ensure all required fields are present and properly formatted
+        formData.append('name', this.form.name.trim());
+        formData.append('description', this.form.description.trim());
+        formData.append('price', parseFloat(this.form.price));
+        formData.append('categories', this.form.categories);
+        formData.append('condition', this.form.condition);
+        formData.append('location', this.form.location.trim());
+        
+        // Only append image if it exists
+        if (this.form.image instanceof File) {
+          formData.append('image', this.form.image);
+        }
+
+        // Log FormData contents for debugging
+        for (let pair of formData.entries()) {
+          console.log('FormData entry:', pair[0], pair[1]);
+        }
+
+        const response = await this.authStore.createListing(formData);
         
         this.toast.success('Listing added successfully!', {
           timeout: 3000,
@@ -183,9 +274,9 @@ export default {
       } catch (error) {
         console.error('Error adding listing:', error);
         
-        if (error.response?.status === 422)
-         {
+        if (error.response?.status === 422) {
           this.errors = error.response.data.errors;
+          console.log('Validation errors:', error.response.data.errors);
           this.toast.error('Please correct the errors in the form.', {
             timeout: 5000,
           });
@@ -254,5 +345,24 @@ export default {
   color: #dc3545;
   font-size: 0.875em;
   margin-top: 0.25rem;
+}
+
+.form-text {
+  font-size: 0.875em;
+  margin-top: 0.25rem;
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border-right: none;
+}
+
+.input-group .form-control {
+  border-left: none;
+}
+
+.input-group .form-control:focus {
+  border-color: #ced4da;
+  box-shadow: none;
 }
 </style> 

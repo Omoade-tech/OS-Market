@@ -1,7 +1,7 @@
 <template>
-    <div class="container login-page">
-      <div class="row">
-        <div class="col-md-6 d-none d-md-flex align-items-center justify-content-center">
+    <div class="container login-page ">
+      <div class="row mt-5">
+        <div class="col-md-6 d-none d-md-flex align-items-center justify-content-center mt-5">
           <div class="quote-container">
             <h2 class="quote-title">Welcome to MarketPlace</h2>
             <p class="quote-text">"Your one-stop destination for buying and selling. Connect with buyers and sellers, discover amazing products, and grow your business."</p>
