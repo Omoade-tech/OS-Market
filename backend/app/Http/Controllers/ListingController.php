@@ -355,7 +355,7 @@ class ListingController extends Controller
                         'price' => $listing->price,
                         'image' => $listing->image,
                         'image_url' => $listing->image_url,
-                        'category' => $listing->categories,
+                        'categories' => $listing->categories,
                         'condition' => $listing->condition,
                         'status' => $listing->status,
                         'location' => $listing->location,

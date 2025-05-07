@@ -399,7 +399,7 @@ export const useAuthStore = defineStore('auth', {
                         categories: listing.category,
                         condition: listing.condition,
                         status: listing.status || 'active',
-                        image: listing.image ? `/storage/${listing.image}` : null,
+                        image: listing.image,
                         created_at: listing.created_at,
                         updated_at: listing.updated_at
                     }));

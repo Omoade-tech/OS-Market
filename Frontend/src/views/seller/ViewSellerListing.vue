@@ -27,7 +27,18 @@
     <div v-else class="listings-grid w-100">
       <div v-for="listing in listings" :key="listing.id" class="listing-card">
         <div class="listing-image">
-          <img :src="listing.image ? `${apiUrl}/storage/${listing.image}` : '/images/placeholder.jpg'" :alt="listing.name">
+          <img 
+            v-if="listing.image" 
+            :src="listing.image_url || `${apiUrl}/storage/${listing.image}`" 
+            :alt="listing.name"
+            @error="handleImageError"
+            @load="handleImageLoad"
+          >
+          <img 
+            v-else 
+            src="https://placehold.co/640x480/004477/FFFFFF?text=No+Image" 
+            :alt="listing.name"
+          >
         </div>
         <div class="listing-info">
           <h3>{{ listing.name }}</h3>
@@ -148,7 +159,7 @@ export default {
   },
   data() {
     return {
-      apiUrl: import.meta.env.VITE_API_URL,
+      apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
       listings: [],
       loading: true,
       error: null,
@@ -193,6 +204,17 @@ export default {
         const authStore = useAuthStore();
         await authStore.fetchSellerListings();
         this.listings = authStore.listings;
+        console.log('API URL:', this.apiUrl);
+        console.log('Listings:', this.listings);
+        if (this.listings.length > 0) {
+          const firstListing = this.listings[0];
+          console.log('First listing image data:', {
+            image: firstListing.image,
+            image_url: firstListing.image_url,
+            full_url: `${this.apiUrl}/storage/${firstListing.image}`,
+            final_url: firstListing.image_url || `${this.apiUrl}/storage/${firstListing.image}`
+          });
+        }
       } catch (error) {
         this.error = error.message;
         useToast().error('Failed to load listings: ' + error.message);
@@ -228,6 +250,16 @@ export default {
       } else {
         this.imagePreview = null;
       }
+    },
+    handleImageError(event) {
+      console.log('Image load error:', {
+        src: event.target.src,
+        image: event.target.dataset.image
+      });
+      event.target.src = 'https://placehold.co/640x480/004477/FFFFFF?text=Image+Not+Available';
+    },
+    handleImageLoad(event) {
+      console.log('Image loaded successfully:', event.target.src);
     },
     async updateListing() {
       this.updating = true;
