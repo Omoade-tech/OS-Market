@@ -1,68 +1,95 @@
 <template>
-  <div class="container mt-4">
-    <div class="row">
-      <div class="col-12">
-        <h1 class="mb-4">Seller Dashboard</h1>
-        <div class="card">
-          <div class="card-body">
-            <h2 class="card-title">Welcome, {{ user?.name || 'Seller' }}!</h2>
-            <p class="card-text">This is your seller dashboard where you can:</p>
-            <ul>
-              <li>Manage your products</li>
-              <li>View sales history</li>
-              <li>Respond to buyer inquiries</li>
-              <li>Update your profile</li>
-            </ul>
-          </div>
+  <div class="seller-dashboard" v-if="isAuthenticated">
+    <SellerSidebar />
+    <div class="main-content">
+      <div class="dashboard-grid">
+        <div class="listings-section">
+          <ViewSellerListing />
+        </div>
+        <div class="profile-section">
+          <!-- <Profile /> -->
         </div>
       </div>
     </div>
   </div>
+  <div v-else>
+    <p>Please login to access the seller dashboard</p>
+  </div>
 </template>
 
 <script>
-import { useAuthStore } from '@/stores/auth';
 import { computed } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import SellerSidebar from '@/components/SellerSidebar.vue';
+import ViewSellerListing from '@/views/seller/ViewSellerListing.vue';
+import Profile from '@/views/Profile.vue';
 
 export default {
+  name: 'SellerDashboard',
+  components: {
+    SellerSidebar,
+    ViewSellerListing,
+    Profile
+  },
   setup() {
     const authStore = useAuthStore();
-    const user = computed(() => authStore.user);
-
     return {
-      user
+      isAuthenticated: computed(() => authStore.isAuthenticated)
     };
   }
-};
+}
 </script>
 
 <style scoped>
-.card {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.seller-dashboard {
+  display: flex;
+  min-height: 100vh;
+  padding-top: 60px;
 }
 
-.card-title {
-  color: #333;
-  margin-bottom: 1rem;
+.main-content {
+  flex: 1;
+  margin-left: 250px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
 }
 
-.card-text {
-  color: #666;
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-ul {
-  list-style-type: none;
-  padding-left: 0;
+.listings-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 }
 
-ul li {
-  padding: 0.5rem 0;
-  color: #444;
+.profile-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  height: fit-content;
 }
 
-ul li:before {
-  content: "✓";
-  color: #28a745;
-  margin-right: 0.5rem;
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    margin-top: 60px;
+    padding: 15px;
+  }
 }
 </style>

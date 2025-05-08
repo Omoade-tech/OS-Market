@@ -14,15 +14,14 @@
             <li class="nav-item me-3">
               <router-link class="nav-link" to="/about">About</router-link>
             </li>
-          </template>
-            <!-- <li class="nav-item me-3">
-              <router-link class="nav-link" to="/blog">Blog</router-link>
-            </li> -->
+            
+            </template>
+          
             <!-- <template v-if="isAuthenticated">
-            <li class="nav-item me-3">
-              <router-link class="nav-link" to="/post">Post</router-link>
-            </li>
-          </template> -->
+              <li v-if="user?.role === 'buyer'" class="nav-item me-3">
+                <router-link class="nav-link" to="/listing">Listing</router-link>
+              </li>
+            </template> -->
           </ul>
         </div>
         <div class="navbar-nav ms-auto">
@@ -42,14 +41,17 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                 <li v-if="user?.role === 'seller'">
-                  <router-link class="dropdown-item" :to="'/sellerdashboard/'">Dashboard</router-link>
+                  <router-link class="dropdown-item" :to="'/seller/dashboard'">Dashboard</router-link>
                 </li>
                 <li v-if="user?.role === 'seller'">
-                  <router-link class="dropdown-item" to="/profile">Profile</router-link>
+                  <!-- <router-link class="dropdown-item" to="/profile">Profile</router-link> -->
                 </li>
                 <li v-if="user?.role === 'buyer'">
                   <router-link class="dropdown-item" to="/buyerdashboard">Dashboard</router-link>
                 </li>
+                <!-- <li v-if="user?.role === 'buyer'">
+                  <router-link class="dropdown-item" to="/listing">Listing</router-link>
+                </li> -->
                 <li v-if="user?.role === 'buyer'">
                   <router-link class="dropdown-item" to="/profile">Profile</router-link>
                 </li>
@@ -65,6 +67,7 @@
                 </li>
               </ul>
             </li>
+            
           </template>
         </div>
       </div>
@@ -106,10 +109,17 @@
   <style scoped>
   .navbar {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: #fff;
   }
   
   .dropdown-menu {
     min-width: 200px;
+    z-index: 1100; /* Higher than sidebar */
   }
   
   .dropdown-item:active {

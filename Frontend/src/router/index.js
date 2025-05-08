@@ -2,11 +2,19 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import Home from '@/views/Home.vue'
 import About from '@/views/About.vue'
+import Listing from '@/views/Listing.vue'
 import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
 import SellerDashboard from '@/views/SellerDashboard.vue'
 import BuyerDashboard from '@/views/BuyerDashboard.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
+import Profile from '@/views/Profile.vue'
+import ListingDetail from '@/views/ListingDetail.vue'
+import AddListing from '@/views/seller/AddListing.vue'
+import SellerLayout from '@/layouts/SellerLayout.vue'
+import ViewSellerListing from '@/views/seller/ViewSellerListing.vue'
+import Messages from '@/views/seller/Messages.vue'
+import AdminListings from '@/views/AdminListings.vue'
 
 const routes = [
   {
@@ -18,6 +26,19 @@ const routes = [
     path: '/about',
     name: 'about',
     component: About
+  },
+  {
+    path: "/listing",
+    name: 'listing',
+    component: Listing
+  },
+  {
+    path: "/listings/:id",
+    name: 'listing-detail',
+    component: ListingDetail,
+    meta: { 
+      requiresAuth: true
+    }
   },
   {
     path: '/login',
@@ -40,13 +61,52 @@ const routes = [
     }
   },
   {
-    path: '/sellerdashboard',
-    name: 'sellerdashboard',
-    component: SellerDashboard,
+    path: '/profile',
+    name: 'profile',
+    component: Profile,
+    meta: { 
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/seller',
+    component: SellerLayout,
     meta: { 
       requiresAuth: true,
       role: 'seller'
-    }
+    },
+    children: [
+      {
+        path: '',
+        redirect: { name: 'view-seller-listings' }
+      },
+      {
+        path: 'dashboard',
+        name: 'sellerdashboard',
+        component: SellerDashboard
+      },
+      {
+        path: 'add-listing',
+        name: 'add-listing',
+        component: AddListing
+      },
+      {
+        path: 'listings',
+        name: 'view-seller-listings',
+        component: ViewSellerListing
+      },
+      {
+        path: 'profile',
+        name: 'seller-profile',
+        component: Profile
+      },
+      
+      {
+        path: 'messages',
+        name: 'seller-messages',
+        component: Messages 
+      },
+    ]
   },
   {
     path: '/buyerdashboard',
@@ -64,6 +124,15 @@ const routes = [
     meta: { 
       requiresAuth: true,
       role: 'admin'
+}
+  },
+  {
+    path: '/adminlistings',
+    name: 'adminlistings',
+    component: AdminListings,
+    meta: {
+      requiresAuth: true,
+      role: 'admin'
     }
   }
 ]
@@ -77,7 +146,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
-  const userRole = authStore.userRole;
+  const isAdmin = authStore.isAdmin;
 
   // Handle authentication
   if (to.meta.requiresAuth && !isAuthenticated) {
@@ -88,41 +157,18 @@ router.beforeEach((to, from, next) => {
   // Handle guest routes
   if (to.meta.requiresGuest && isAuthenticated) {
     // Redirect to appropriate dashboard based on role
-    switch (userRole) {
-      case 'admin':
-        next({ name: 'admindashboard' });
-        break;
-      case 'seller':
-        next({ name: 'sellerdashboard' });
-        break;
-      case 'buyer':
-        next({ name: 'buyerdashboard' });
-        break;
-      default:
-        next({ name: 'home' });
+    if (isAdmin) {
+      next({ name: 'admindashboard' });
+    } else {
+      next({ name: 'home' });
     }
     return;
   }
 
   // Handle role-based access
-  if (to.meta.role && isAuthenticated) {
-    if (to.meta.role !== userRole) {
-      // Redirect to appropriate dashboard if role doesn't match
-      switch (userRole) {
-        case 'admin':
-          next({ name: 'admindashboard' });
-          break;
-        case 'seller':
-          next({ name: 'sellerdashboard' });
-          break;
-        case 'buyer':
-          next({ name: 'buyerdashboard' });
-          break;
-        default:
-          next({ name: 'home' });
-      }
-      return;
-    }
+  if (to.meta.role === 'admin' && isAuthenticated && !isAdmin) {
+    next({ name: 'home' });
+    return;
   }
 
   next();
