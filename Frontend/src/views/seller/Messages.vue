@@ -1,11 +1,24 @@
 <template>
   <div class="messages-container">
-    <div v-if="!isSeller" class="text-center py-8">
+    <div v-if="!authStore.getIsSeller" class="text-center py-8">
       <p class="text-red-500">Access denied. This page is for sellers only.</p>
+      <button @click="$router.push('/login')" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        Go to Login
+      </button>
     </div>
 
     <template v-else>
-      <h2 class="text-2xl font-bold mb-6">Messages from Buyers</h2>
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Messages from Buyers</h2>
+        <div class="flex items-center space-x-4">
+          <span v-if="authStore.getUnreadCount > 0" class="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm">
+            {{ authStore.getUnreadCount }} unread messages
+          </span>
+          <button @click="refreshMessages" class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+            <i class="fas fa-sync-alt mr-1"></i> Refresh
+          </button>
+        </div>
+      </div>
       
       <div v-if="authStore.loading" class="flex justify-center">
         <div class="loader">Loading messages...</div>
@@ -114,19 +127,21 @@ export default {
   },
   setup() {
     const authStore = useAuthStore();
-    const { conversations } = storeToRefs(authStore);
+    const { conversations, getIsSeller, getUnreadCount } = storeToRefs(authStore);
 
     return {
       authStore,
-      conversations
+      conversations,
+      getIsSeller,
+      getUnreadCount
     };
   },
   data() {
     return {
-      isSeller: false,
       messages: [],
       selectedConversation: null,
-      loadingConversation: false
+      loadingConversation: false,
+      refreshInterval: null
     }
   },
   methods: {
@@ -168,14 +183,20 @@ export default {
       // Refresh the messages list
       await this.fetchMessages();
     },
+    async refreshMessages() {
+      try {
+        await this.fetchMessages();
+      } catch (error) {
+        console.error('Error refreshing messages:', error);
+      }
+    },
     checkAuth() {
       if (!this.authStore.isAuthenticated) {
         this.$router.push('/login');
         return;
       }
       
-      this.isSeller = this.authStore.userRole === 'seller';
-      if (!this.isSeller) {
+      if (!this.authStore.getIsSeller) {
         this.authStore.error = 'Access denied. This page is for sellers only.';
       }
     },
@@ -206,10 +227,16 @@ export default {
       deep: true
     }
   },
-  async mounted() {
+  mounted() {
     this.checkAuth();
-    if (this.isSeller) {
-      await this.fetchMessages();
+    this.fetchMessages();
+    // Set up auto-refresh every 30 seconds
+    this.refreshInterval = setInterval(this.refreshMessages, 30000);
+  },
+  beforeUnmount() {
+    // Clear the refresh interval when component is unmounted
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
     }
   }
 }

@@ -10,6 +10,7 @@ export const useAuthStore = defineStore('auth', {
             token: localStorage.getItem('token') || null,
             isAuthenticated: !!localStorage.getItem('token'),
             isAdmin: storedUser?.role === 'admin' || false,
+            isSeller: storedUser?.role === 'seller' || false,
             loading: false,
             error: null,
 
@@ -52,6 +53,9 @@ export const useAuthStore = defineStore('auth', {
         },
         getIsAdmin() {
             return this.isAdmin;
+        },
+        getIsSeller() {
+            return this.isSeller;
         },
         getLoading() {
             return this.loading;
@@ -114,6 +118,7 @@ export const useAuthStore = defineStore('auth', {
                 this.token = response.token;
                 this.isAuthenticated = true;
                 this.isAdmin = response.user.role === 'admin';
+                this.isSeller = response.user.role === 'seller';
                 localStorage.setItem('user', JSON.stringify(response.user));
                 localStorage.setItem('token', response.token);
                 return response;
@@ -158,6 +163,7 @@ export const useAuthStore = defineStore('auth', {
             this.token = null;
             this.isAuthenticated = false;
             this.isAdmin = false;
+            this.isSeller = false;
             localStorage.removeItem('user');
             localStorage.removeItem('token');
         },
@@ -229,22 +235,13 @@ export const useAuthStore = defineStore('auth', {
 
         // Listing actions
         async fetchListings(page = 1) {
-            this.loading = true;
-            this.error = null;
-
             try {
-                const response = await api.getListings(page);
-                if (response.success) {
-                    this.listings = response.data;
-                    return response;
-                } else {
-                    throw new Error(response.message || 'Failed to fetch listings');
-                }
+                const response = await api.listings.getAll(page, 'approved');
+                this.listings = response.data;
+                return response;
             } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to fetch listings';
+                console.error('Error fetching listings:', error);
                 throw error;
-            } finally {
-                this.loading = false;
             }
         },
 
@@ -269,8 +266,8 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                const response = await api.getListingById(id);
-                this.currentListing = response;
+                const response = await api.listings.getById(id);
+                this.currentListing = response.data;
                 return response;
             } catch (error) {
                 this.error = error.response?.data?.message || 'Failed to fetch listing';
@@ -285,7 +282,7 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                const response = await api.createListing(listingData);
+                const response = await api.listings.create(listingData);
                 await this.fetchListings();
                 return response;
             } catch (error) {
@@ -301,7 +298,7 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                const response = await api.updateListing(id, formData);
+                const response = await api.listings.update(id, formData);
                 if (response.success) {
                     // Update the listing in the local state
                     const index = this.listings.findIndex(listing => listing.id === id);
@@ -365,7 +362,7 @@ export const useAuthStore = defineStore('auth', {
                     )
                 );
 
-                const response = await api.searchListings(cleanFilters);
+                const response = await api.listings.search(cleanFilters);
                 if (response.success) {
                     this.listings = response.data;
                     return response;
@@ -448,12 +445,39 @@ export const useAuthStore = defineStore('auth', {
         },
 
         // Messages actions
+        async sendMessage(messageData) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.messages.sendMessage(messageData);
+                if (response.success) {
+                    this.messages.push(response.data);
+                    // Update the last message in conversations
+                    const conversationIndex = this.conversations.findIndex(
+                        conv => conv.id === messageData.receiver_id
+                    );
+                    if (conversationIndex !== -1) {
+                        this.conversations[conversationIndex].last_message = messageData.message;
+                        this.conversations[conversationIndex].last_message_at = new Date().toISOString();
+                    }
+                    return response;
+                }
+                throw new Error('Failed to send message');
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message || 'Failed to send message';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
         async fetchConversations() {
             this.loading = true;
             this.error = null;
 
             try {
-                const response = await api.getDashboardMessages();
+                const response = await api.messages.getDashboardMessages();
                 if (response.success) {
                     this.conversations = response.messages;
                     this.unreadCount = response.unread_count || 0;
@@ -473,7 +497,7 @@ export const useAuthStore = defineStore('auth', {
             this.error = null;
 
             try {
-                const response = await api.getConversation(userId);
+                const response = await api.messages.getConversation(userId);
                 if (response.success) {
                     this.messages = response.conversation;
                     this.currentConversation = {
@@ -485,33 +509,6 @@ export const useAuthStore = defineStore('auth', {
                 throw new Error('Failed to fetch conversation');
             } catch (error) {
                 this.error = error.response?.data?.message || error.message || 'Failed to fetch conversation';
-                throw error;
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        async sendMessage(messageData) {
-            this.loading = true;
-            this.error = null;
-
-            try {
-                const response = await api.sendMessage(messageData);
-                if (response.success) {
-                    this.messages.push(response.data);
-                    // Update the last message in conversations
-                    const conversationIndex = this.conversations.findIndex(
-                        conv => conv.id === messageData.receiver_id
-                    );
-                    if (conversationIndex !== -1) {
-                        this.conversations[conversationIndex].last_message = messageData.message;
-                        this.conversations[conversationIndex].last_message_at = new Date().toISOString();
-                    }
-                    return response;
-                }
-                throw new Error('Failed to send message');
-            } catch (error) {
-                this.error = error.response?.data?.message || error.message || 'Failed to send message';
                 throw error;
             } finally {
                 this.loading = false;

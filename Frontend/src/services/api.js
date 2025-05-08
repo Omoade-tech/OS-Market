@@ -160,10 +160,14 @@ export default {
 
     // Listing endpoints
     listings: {
-        async getAll(page = 1) {
+        async getAll(page = 1, status = 'approved') {
             try {
                 const response = await apiClient.get('/listings', {
-                    params: { page, per_page: 10 }
+                    params: { 
+                        page, 
+                        per_page: 10,
+                        status 
+                    }
                 });
                 return response.data;
             } catch (error) {
@@ -240,6 +244,39 @@ export default {
         }
     },
 
+    // Messages endpoints
+    messages: {
+        async sendMessage(messageData) {
+            try {
+                const response = await apiClient.post('/messages/send', messageData);
+                return response.data;
+            } catch (error) {
+                console.error('Failed to send message:', error);
+                throw error;
+            }
+        },
+
+        async getDashboardMessages() {
+            try {
+                const response = await apiClient.get('/messages/dashboard');
+                return response.data;
+            } catch (error) {
+                console.error('Failed to fetch dashboard messages:', error);
+                throw error;
+            }
+        },
+
+        async getConversation(userId) {
+            try {
+                const response = await apiClient.get(`/messages/conversation/${userId}`);
+                return response.data;
+            } catch (error) {
+                console.error('Failed to fetch conversation:', error);
+                throw error;
+            }
+        }
+    },
+
     // Get current user
     async getCurrentUser() {
         try {
@@ -309,16 +346,16 @@ export default {
     },
 
     // Listings: Get user's listings
-    async getUserListings(userId) {
-        try {
-            ensureToken();
-            const response = await apiClient.get(`/listings/user/${userId}`);
-            return response.data;
-        } catch (error) {
-            console.error('Failed to fetch user listings:', error);
-            throw error;
-        }
-    },
+    // async getUserListings(userId) {
+    //     try {
+    //         ensureToken();
+    //         const response = await apiClient.get(`/listings/user/${userId}`);
+    //         return response.data;
+    //     } catch (error) {
+    //         console.error('Failed to fetch user listings:', error);
+    //         throw error;
+    //     }
+    // },
 
     // Get seller listings
     async getSellerListings() {
@@ -328,42 +365,6 @@ export default {
             return response.data;
         } catch (error) {
             console.error('Failed to fetch seller listings:', error);
-            throw error;
-        }
-    },
-
-    // Messages: Get dashboard messages
-    async getDashboardMessages() {
-        try {
-            ensureToken();
-            const response = await apiClient.get('/messages/dashboard');
-            return response.data;
-        } catch (error) {
-            console.error('Failed to fetch dashboard messages:', error);
-            throw error;
-        }
-    },
-
-    // Messages: Get conversation with user
-    async getConversation(userId) {
-        try {
-            ensureToken();
-            const response = await apiClient.get(`/messages/conversation/${userId}`);
-            return response.data;
-        } catch (error) {
-            console.error('Failed to fetch conversation:', error);
-            throw error;
-        }
-    },
-
-    // Messages: Send message
-    async sendMessage(messageData) {
-        try {
-            ensureToken();
-            const response = await apiClient.post('/messages/send', messageData);
-            return response.data;
-        } catch (error) {
-            console.error('Failed to send message:', error);
             throw error;
         }
     },

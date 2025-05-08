@@ -15,7 +15,15 @@ class ListingController extends Controller
     {
         try {
             $perPage = $request->input('per_page', 10);
-            $listings = Listing::latest()->paginate($perPage);
+            $query = Listing::query()->with('user');
+
+            // Filter by status if provided
+            if ($request->filled('status')) {
+                $query->where('status', $request->input('status'));
+            }
+
+            $listings = $query->latest()->paginate($perPage);
+            
             return response()->json([
                 'success' => true, 
                 'data' => $listings->items(),
