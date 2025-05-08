@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid py-4">
+  <div class="container-fluid py-4 mt-5">
     <h2 class="h3 mb-4">Manage Listings</h2>
     
     <!-- Loading State -->
@@ -225,6 +225,12 @@ export default {
   .table td:nth-child(1) {
     min-width: 100px;
   }
+
+  /* Scrollbar styles for medium screens */
+  .table-responsive::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
 }
 
 @media screen and (max-width: 768px) {
@@ -232,7 +238,7 @@ export default {
     min-width: 100px;
   }
   
-  .table td:nth-child(3) { /* Description column */
+  .table td:nth-child(3) { 
     min-width: 150px;
   }
   
@@ -245,6 +251,20 @@ export default {
   .btn-group .btn {
     margin: 0 !important;
   }
+
+  /* Scrollbar styles for tablets */
+  .table-responsive::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb {
+    background: #888;
+  }
 }
 
 @media screen and (max-width: 576px) {
@@ -252,7 +272,7 @@ export default {
     min-width: 80px;
   }
   
-  .table td:nth-child(3) { /* Description column */
+  .table td:nth-child(3) { 
     min-width: 120px;
   }
   
@@ -267,6 +287,35 @@ export default {
   
   .page-item {
     margin: 2px;
+  }
+
+  /* Scrollbar styles for mobile */
+  .table-responsive {
+    max-height: 60vh;
+  }
+
+  .table-responsive::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+
+  .table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb {
+    background: #888;
+  }
+
+  /* Dark mode support for mobile */
+  @media (prefers-color-scheme: dark) {
+    .table-responsive::-webkit-scrollbar-track {
+      background: #2d2d2d;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+      background: #666;
+    }
   }
 }
 </style> 

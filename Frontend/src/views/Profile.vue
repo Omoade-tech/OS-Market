@@ -1,5 +1,5 @@
 <template>
-  <div class="profile-container">
+  <div class="container profile-container mt-5">
     <div class="card profile-card">
       <div class="card-header bg-primary text-white">
         <h5 class="mb-0">User Profile</h5>

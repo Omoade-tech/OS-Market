@@ -295,74 +295,156 @@ export default {
 
 <style scoped>
 .add-listing-container {
-  padding: 20px;
   max-width: 800px;
-  margin: 0 auto;
+  margin: 2rem auto;
+  padding: 0 1rem;
 }
 
 .card {
-  border: none;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
-  background-color: #f8f9fa;
+  padding: 1.5rem;
   border-bottom: 1px solid #eee;
-  padding: 15px 20px;
 }
 
 .card-header h4 {
   margin: 0;
-  color: #2c3e50;
+  color: #333;
+  font-size: 1.5rem;
 }
 
 .card-body {
-  padding: 20px;
+  padding: 1.5rem;
 }
 
 .form-label {
   font-weight: 500;
-  color: #2c3e50;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.75rem;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
 
 .btn-primary {
-  background-color: #3498db;
-  border-color: #3498db;
-  padding: 10px 20px;
+  background-color: #4a90e2;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
 }
 
 .btn-primary:hover {
-  background-color: #2980b9;
-  border-color: #2980b9;
+  background-color: #357abd;
 }
 
 .btn-primary:disabled {
-  background-color: #95a5a6;
-  border-color: #95a5a6;
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
-.invalid-feedback {
-  color: #dc3545;
-  font-size: 0.875em;
-  margin-top: 0.25rem;
+/* Media Queries */
+@media (max-width: 768px) {
+  .add-listing-container {
+    margin: 1rem auto;
+  }
+
+  .card-header {
+    padding: 1rem;
+  }
+
+  .card-header h4 {
+    font-size: 1.25rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .form-control, .form-select {
+    padding: 0.5rem;
+  }
+
+  .btn-primary {
+    width: 100%;
+    margin-top: 1rem;
+  }
 }
 
-.form-text {
-  font-size: 0.875em;
-  margin-top: 0.25rem;
+@media (max-width: 480px) {
+  .add-listing-container {
+    margin: 2.9rem auto;
+    padding: 0 0.5rem;
+  }
+
+  .card-header {
+    padding: 0.75rem;
+  }
+
+  .card-body {
+    padding: 0.75rem;
+  }
+
+  .form-label {
+    font-size: 0.9rem;
+  }
+
+  .form-control, .form-select {
+    font-size: 0.9rem;
+  }
+
+  .input-group-text {
+    font-size: 0.9rem;
+  }
 }
 
-.input-group-text {
-  background-color: #f8f9fa;
-  border-right: none;
-}
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .card {
+    background: #1a1a1a;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
 
-.input-group .form-control {
-  border-left: none;
-}
+  .card-header {
+    border-bottom-color: #333;
+  }
 
-.input-group .form-control:focus {
-  border-color: #ced4da;
-  box-shadow: none;
+  .card-header h4 {
+    color: #fff;
+  }
+
+  .form-label {
+    color: #fff;
+  }
+
+  .form-control, .form-select {
+    background-color: #2a2a2a;
+    border-color: #333;
+    color: #fff;
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+
+  .input-group-text {
+    background-color: #2a2a2a;
+    border-color: #333;
+    color: #fff;
+  }
 }
 </style> 

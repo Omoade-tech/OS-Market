@@ -188,7 +188,10 @@ export default {
         .join(' ');
     },
     formatCategory(category) {
-      return this.formatText(category);
+      if (!category) return 'Unknown';
+      // Handle both string and array categories
+      const categoryValue = Array.isArray(category) ? category[0] : category;
+      return this.formatText(categoryValue);
     },
     formatCondition(condition) {
       return this.formatText(condition, '-');
