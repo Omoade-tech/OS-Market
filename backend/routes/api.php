@@ -26,7 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/listings', [ListingController::class, 'index']);             
     Route::get('/listings/search', [ListingController::class, 'search']);     
     Route::get('/listings/filter-options', [ListingController::class, 'getFilterOptions']);     
-        // Get listings by specific user
+    // Get listings by specific user
     Route::get('/listings/user/{user_id}', [ListingController::class, 'userListings']); 
 
     Route::post('/listings', [ListingController::class, 'store']);           
@@ -40,4 +40,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages/conversation/{userId}', [MessageController::class, 'conversation']);
 
     Route::get('/seller/listings', [ListingController::class, 'getSellerListings']);
+});
+
+// Admin routes
+Route::prefix('admin')->middleware(['auth:sanctum', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
+    Route::get('/listings', [ListingController::class, 'getAllListings']);
+    Route::get('/listings/stats', [ListingController::class, 'getListingStats']);
+    Route::patch('/listings/{id}/status', [ListingController::class, 'updateListingStatus']);
 });

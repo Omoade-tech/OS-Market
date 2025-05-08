@@ -14,6 +14,7 @@ import AddListing from '@/views/seller/AddListing.vue'
 import SellerLayout from '@/layouts/SellerLayout.vue'
 import ViewSellerListing from '@/views/seller/ViewSellerListing.vue'
 import Messages from '@/views/seller/Messages.vue'
+import AdminListings from '@/views/AdminListings.vue'
 
 const routes = [
   {
@@ -123,6 +124,15 @@ const routes = [
     meta: { 
       requiresAuth: true,
       role: 'admin'
+}
+  },
+  {
+    path: '/adminlistings',
+    name: 'adminlistings',
+    component: AdminListings,
+    meta: {
+      requiresAuth: true,
+      role: 'admin'
     }
   }
 ]
@@ -136,7 +146,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
-  const userRole = authStore.userRole;
+  const isAdmin = authStore.isAdmin;
 
   // Handle authentication
   if (to.meta.requiresAuth && !isAuthenticated) {
@@ -147,41 +157,18 @@ router.beforeEach((to, from, next) => {
   // Handle guest routes
   if (to.meta.requiresGuest && isAuthenticated) {
     // Redirect to appropriate dashboard based on role
-    switch (userRole) {
-      case 'admin':
-        next({ name: 'admindashboard' });
-        break;
-      case 'seller':
-        next({ name: 'sellerdashboard' });
-        break;
-      case 'buyer':
-        next({ name: 'buyerdashboard' });
-        break;
-      default:
-        next({ name: 'home' });
+    if (isAdmin) {
+      next({ name: 'admindashboard' });
+    } else {
+      next({ name: 'home' });
     }
     return;
   }
 
   // Handle role-based access
-  if (to.meta.role && isAuthenticated) {
-    if (to.meta.role !== userRole) {
-      // Redirect to appropriate dashboard if role doesn't match
-      switch (userRole) {
-        case 'admin':
-          next({ name: 'admindashboard' });
-          break;
-        case 'seller':
-          next({ name: 'sellerdashboard' });
-          break;
-        case 'buyer':
-          next({ name: 'buyerdashboard' });
-          break;
-        default:
-          next({ name: 'home' });
-      }
-      return;
-    }
+  if (to.meta.role === 'admin' && isAuthenticated && !isAdmin) {
+    next({ name: 'home' });
+    return;
   }
 
   next();

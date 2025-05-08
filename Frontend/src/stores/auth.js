@@ -1,47 +1,63 @@
 import { defineStore } from 'pinia';
 import api from '@/services/api.js';
-import axios from 'axios';
 
 export const useAuthStore = defineStore('auth', {
-    state: () => ({
-        // Auth state
-        user: JSON.parse(localStorage.getItem('user')) || null,
-        token: localStorage.getItem('token') || null,
-        loading: false,
-        error: null,
+    state: () => {
+        const storedUser = JSON.parse(localStorage.getItem('user')) || null;
+        return {
+            // Auth state
+            user: storedUser,
+            token: localStorage.getItem('token') || null,
+            isAuthenticated: !!localStorage.getItem('token'),
+            isAdmin: storedUser?.role === 'admin' || false,
+            loading: false,
+            error: null,
 
-        // Listings state
-        listings: [],
-        currentListing: null,
-        filterOptions: {
-            categories: [],
-            conditions: [],
-            locations: []
-        },
-        searchFilters: {
-            name: '',
-            location: '',
-            categories: '',
-            condition: '',
-            page: 1,
-            per_page: 10
-        },
-        conversations: [],
-        currentConversation: null,
-        messages: [],
-        unreadCount: 0
-    }),
+            // Listings state
+            listings: [],
+            currentListing: null,
+            filterOptions: {
+                categories: [],
+                conditions: [],
+                locations: []
+            },
+            searchFilters: {
+                name: '',
+                location: '',
+                categories: '',
+                condition: '',
+                page: 1,
+                per_page: 10
+            },
+            conversations: [],
+            currentConversation: null,
+            messages: [],
+            unreadCount: 0,
+            // Add status update state
+            statusUpdateLoading: false,
+            statusUpdateError: null
+        };
+    },
 
     getters: {
         // Auth getters
-        isAuthenticated() {
-            return !!this.token;
-        },
-        currentUser() {
+        getUser() {
             return this.user;
         },
-        userRole() {
-            return this.user?.role || null;
+        getToken() {
+            return this.token;
+        },
+        getIsAuthenticated() {
+            return this.isAuthenticated;
+        },
+        getIsAdmin() {
+            return this.isAdmin;
+        },
+        getLoading() {
+            return this.loading;
+        },
+        getError() {
+            return this.error;
         },
 
         // Listings getters
@@ -51,11 +67,11 @@ export const useAuthStore = defineStore('auth', {
         getCurrentListing(state) {
             return state.currentListing;
         },
-        isLoading(state) {
-            return state.loading;
+        getStatusUpdateLoading(state) {
+            return state.statusUpdateLoading;
         },
-        getError(state) {
-            return state.error;
+        getStatusUpdateError(state) {
+            return state.statusUpdateError;
         },
 
         // Filter options getters
@@ -90,21 +106,19 @@ export const useAuthStore = defineStore('auth', {
     actions: {
         // Auth actions
         async login(credentials) {
-            this.loading = true;
-            this.error = null;
-
             try {
-                const response = await api.login(credentials);
-                if (response.token) {
-                    this.token = response.token;
-                    this.user = response.user;
-                    localStorage.setItem('token', response.token);
-                    localStorage.setItem('user', JSON.stringify(response.user));
-                    return response;
-                }
-                throw new Error('Login failed: Invalid response format');
+                this.loading = true;
+                this.error = null;
+                const response = await api.auth.login(credentials);
+                this.user = response.user;
+                this.token = response.token;
+                this.isAuthenticated = true;
+                this.isAdmin = response.user.role === 'admin';
+                localStorage.setItem('user', JSON.stringify(response.user));
+                localStorage.setItem('token', response.token);
+                return response;
             } catch (error) {
-                this.error = error.response?.data?.message || error.message || 'Login failed';
+                this.error = error.response?.data?.message || 'Login failed';
                 throw error;
             } finally {
                 this.loading = false;
@@ -112,37 +126,38 @@ export const useAuthStore = defineStore('auth', {
         },
 
         async register(userData) {
-            this.loading = true;
-            this.error = null;
-
             try {
-                const response = await api.register(userData);
-                if (response.success) {
-                    return response;
-                }
-                throw new Error(response.message || 'Registration failed');
+                this.loading = true;
+                this.error = null;
+                const response = await api.auth.register(userData);
+                return response;
             } catch (error) {
-                this.error = error.response?.data?.message || error.message || 'Registration failed';
+                this.error = error.response?.data?.message || 'Registration failed';
                 throw error;
             } finally {
                 this.loading = false;
             }
         },
 
-        logout() {
-            api.logout().catch(error => {
-                console.error('Logout request failed:', error);
-            });
+        async logout() {
+            try {
+                this.loading = true;
+                this.error = null;
+                await api.auth.logout();
+                this.clearAuth();
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Logout failed';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        clearAuth() {
             this.user = null;
             this.token = null;
-            this.listings = [];
-            this.currentListing = null;
-            this.filterOptions = { categories: [], conditions: [], locations: [] };
-            this.searchFilters = { name: '', location: '', categories: '', condition: '', page: 1, per_page: 10 };
-            this.conversations = [];
-            this.currentConversation = null;
-            this.messages = [];
-            this.unreadCount = 0;
+            this.isAuthenticated = false;
+            this.isAdmin = false;
             localStorage.removeItem('user');
             localStorage.removeItem('token');
         },
@@ -506,6 +521,93 @@ export const useAuthStore = defineStore('auth', {
         clearCurrentConversation() {
             this.currentConversation = null;
             this.messages = [];
+        },
+
+        // Add new action for updating listing status
+        async updateListingStatus(listingId, status) {
+            this.statusUpdateLoading = true;
+            this.statusUpdateError = null;
+
+            try {
+                if (!this.isAdmin) {
+                    throw new Error('Unauthorized: Only admins can update listing status');
+                }
+
+                const response = await api.admin.updateListingStatus(listingId, status);
+                
+                if (response.success) {
+                    // Update the listing in the current listings array if it exists
+                    const listingIndex = this.listings.findIndex(listing => listing.id === listingId);
+                    if (listingIndex !== -1) {
+                        this.listings[listingIndex] = response.data;
+                    }
+                    
+                    // Update current listing if it's the one being modified
+                    if (this.currentListing && this.currentListing.id === listingId) {
+                        this.currentListing = response.data;
+                    }
+                    
+                    return response.data;
+                }
+                
+                throw new Error(response.message || 'Failed to update listing status');
+            } catch (error) {
+                this.statusUpdateError = error.response?.data?.message || error.message || 'Failed to update listing status';
+                throw error;
+            } finally {
+                this.statusUpdateLoading = false;
+            }
+        },
+
+        // Admin actions
+        async getAdminStats() {
+            try {
+                this.loading = true;
+                this.error = null;
+                const response = await api.admin.getStats();
+                if (response.success) {
+                    return response;
+                }
+                throw new Error(response.message || 'Failed to fetch admin stats');
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message || 'Failed to fetch admin stats';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async getAllListings(page = 1) {
+            try {
+                this.loading = true;
+                this.error = null;
+                const response = await api.getAdminListings(page);
+                if (response.success) {
+                    this.listings = response.data;
+                    return response;
+                } else {
+                    throw new Error(response.message || 'Failed to fetch admin listings');
+                }
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to fetch admin listings';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async getListingDetails(listingId) {
+            try {
+                this.loading = true;
+                this.error = null;
+                const response = await api.admin.getListingDetails(listingId);
+                return response;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to fetch listing details';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
         }
     }
 });

@@ -48,45 +48,195 @@ function ensureToken() {
 }
 
 export default {
-    // Auth: Login
-    async login(credentials) {
-        try {
-            const response = await apiClient.post('/login', credentials);
-            if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
-                apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+    // Admin endpoints
+    admin: {
+        // Get admin dashboard statistics
+        async getStats() {
+            try {
+                ensureToken();
+                console.log('Making request to:', `${API_URL}/admin/listings/stats`);
+                const response = await apiClient.get('/admin/listings/stats');
+                console.log('Response:', response);
                 return response.data;
+            } catch (error) {
+                console.error('Failed to fetch admin stats:', error);
+                if (error.response) {
+                    console.error('Error response:', {
+                        status: error.response.status,
+                        data: error.response.data,
+                        headers: error.response.headers
+                    });
+                }
+                throw error;
             }
-            throw new Error('Login failed: Invalid response format');
-        } catch (error) {
-            console.error('Login failed:', error);
-            throw error;
+        },
+
+        // Get all listings for admin
+        async getAllListings(page = 1) {
+            try {
+                const response = await apiClient.get('/admin/listings', {
+                    params: { page, per_page: 10 }
+                });
+                return response.data;
+            } catch (error) {
+                console.error('Failed to fetch all listings:', error);
+                throw error;
+            }
+        },
+
+        // Update listing status
+        async updateListingStatus(listingId, status) {
+            try {
+                const response = await apiClient.patch(`/admin/listings/${listingId}/status`, { status });
+                return response.data;
+            } catch (error) {
+                throw new Error(error.response?.data?.message || 'Failed to update listing status');
+            }
+        },
+
+        // Get listing details
+        async getListingDetails(listingId) {
+            try {
+                const response = await apiClient.get(`/admin/listings/${listingId}`);
+                return response.data;
+            } catch (error) {
+                console.error('Failed to fetch listing details:', error);
+                throw error;
+            }
         }
     },
 
-    // Auth: Register
-    async register(userData) {
-        try {
-            const response = await apiClient.post('/register', userData);
-            return response.data;
-        } catch (error) {
-            console.error('Registration failed:', error);
-            throw error;
+    // Auth endpoints
+    auth: {
+        async login(credentials) {
+            try {
+                const response = await apiClient.post('/login', credentials);
+                if (response.data.token) {
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('user', JSON.stringify(response.data.user));
+                    apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+                    return response.data;
+                }
+                throw new Error('Login failed: Invalid response format');
+            } catch (error) {
+                console.error('Login failed:', error);
+                throw error;
+            }
+        },
+
+        async register(userData) {
+            try {
+                const response = await apiClient.post('/register', userData);
+                return response.data;
+            } catch (error) {
+                console.error('Registration failed:', error);
+                throw error;
+            }
+        },
+
+        async logout() {
+            try {
+                const response = await apiClient.post('/logout');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                delete apiClient.defaults.headers.common['Authorization'];
+                return response.data;
+            } catch (error) {
+                console.error('Logout failed:', error);
+                throw error;
+            }
+        },
+
+        async getCurrentUser() {
+            try {
+                const response = await apiClient.get('/user');
+                return response.data;
+            } catch (error) {
+                console.error('Failed to get current user:', error);
+                throw error;
+            }
         }
     },
 
-    // Auth: Logout
-    async logout() {
-        try {
-            const response = await apiClient.post('/logout');
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            delete apiClient.defaults.headers.common['Authorization'];
-            return response.data;
-        } catch (error) {
-            console.error('Logout failed:', error);
-            throw error;
+    // Listing endpoints
+    listings: {
+        async getAll(page = 1) {
+            try {
+                const response = await apiClient.get('/listings', {
+                    params: { page, per_page: 10 }
+                });
+                return response.data;
+            } catch (error) {
+                console.error('Failed to fetch listings:', error);
+                throw error;
+            }
+        },
+
+        async getById(id) {
+            try {
+                const response = await apiClient.get(`/listings/${id}`);
+                return response.data;
+            } catch (error) {
+                console.error('Failed to fetch listing:', error);
+                throw error;
+            }
+        },
+
+        async create(listingData) {
+            try {
+                const response = await apiClient.post('/listings', listingData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Accept': 'application/json'
+                    }
+                });
+                return response.data;
+            } catch (error) {
+                console.error('Failed to create listing:', error);
+                throw error;
+            }
+        },
+
+        async update(id, listingData) {
+            try {
+                const response = await apiClient.post(`/listings/${id}`, listingData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Accept': 'application/json'
+                    }
+                });
+                return response.data;
+            } catch (error) {
+                console.error('Failed to update listing:', error);
+                throw error;
+            }
+        },
+
+        async delete(id) {
+            try {
+                const response = await apiClient.delete(`/listings/${id}`);
+                return response.data;
+            } catch (error) {
+                console.error('Failed to delete listing:', error);
+                throw error;
+            }
+        },
+
+        async search(filters) {
+            try {
+                const params = new URLSearchParams();
+                Object.entries(filters).forEach(([key, value]) => {
+                    if (value !== null && value !== undefined && value !== '') {
+                        params.append(key, value);
+                    }
+                });
+
+                const response = await apiClient.get('/listings/search', { params });
+                return response.data;
+            } catch (error) {
+                console.error('Failed to search listings:', error);
+                throw error;
+            }
         }
     },
 
@@ -146,39 +296,6 @@ export default {
         }
     },
 
-    // Listings: Get all listings
-    async getListings(page = 1) {
-        try {
-            ensureToken();
-            const response = await apiClient.get('/listings', {
-                params: { page, per_page: 10 }
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Failed to fetch listings:', error);
-            throw error;
-        }
-    },
-
-    // Listings: Search listings
-    async searchListings(filters) {
-        try {
-            ensureToken();
-            const params = new URLSearchParams();
-            Object.entries(filters).forEach(([key, value]) => {
-                if (value !== null && value !== undefined && value !== '') {
-                    params.append(key, value);
-                }
-            });
-
-            const response = await apiClient.get('/listings/search', { params });
-            return response.data;
-        } catch (error) {
-            console.error('Failed to search listings:', error);
-            throw error;
-        }
-    },
-
     // Listings: Get filter options
     async getFilterOptions() {
         try {
@@ -199,65 +316,6 @@ export default {
             return response.data;
         } catch (error) {
             console.error('Failed to fetch user listings:', error);
-            throw error;
-        }
-    },
-
-    // Listings: Get single listing
-    async getListingById(id) {
-        try {
-            ensureToken();
-            const response = await apiClient.get(`/listings/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error('Failed to fetch listing:', error);
-            throw error;
-        }
-    },
-
-    // Listings: Create new listing
-    async createListing(listingData) {
-        try {
-            ensureToken();
-            
-            const response = await apiClient.post('/listings', listingData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Accept': 'application/json'
-                }
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Failed to create listing:', error);
-            throw error;
-        }
-    },
-
-    // Listings: Update listing
-    async updateListing(id, listingData) {
-        try {
-            ensureToken();
-            const response = await apiClient.post(`/listings/${id}`, listingData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Accept': 'application/json'
-                }
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Failed to update listing:', error);
-            throw error;
-        }
-    },
-
-    // Listings: Delete listing
-    async deleteListing(id) {
-        try {
-            ensureToken();
-            const response = await apiClient.delete(`/listings/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error('Failed to delete listing:', error);
             throw error;
         }
     },
@@ -306,6 +364,20 @@ export default {
             return response.data;
         } catch (error) {
             console.error('Failed to send message:', error);
+            throw error;
+        }
+    },
+
+    // Get admin listings
+    async getAdminListings(page = 1) {
+        try {
+            ensureToken();
+            const response = await apiClient.get('/admin/listings', {
+                params: { page, per_page: 10 }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch admin listings:', error);
             throw error;
         }
     }
