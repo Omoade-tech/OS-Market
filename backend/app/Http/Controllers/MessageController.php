@@ -16,19 +16,21 @@ class MessageController extends Controller
     {
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string'
+            'message' => 'required|string',
+            'listing_id' => 'nullable|exists:listings,id'
         ]);
 
         $message = Message::create([
             'sender_id' => Auth::id(),
             'receiver_id' => $request->receiver_id,
             'message' => $request->message,
-            'read' => false
+            'read' => false,
+            'listing_id' => $request->listing_id
         ]);
 
         return response()->json([
             'success' => true,
-            'data' => $message->load('sender:id,name,email')
+            'data' => $message->load(['sender:id,name,email', 'listing:id,name,image,price'])
         ]);
     }
 
@@ -43,6 +45,8 @@ class MessageController extends Controller
         $messages = Message::where('receiver_id', $user->id)
             ->with(['sender' => function($query) {
                 $query->select('id', 'name', 'email');
+            }, 'listing' => function($query) {
+                $query->select('id', 'name', 'image', 'price', 'description', 'location', 'categories', 'condition', 'created_at');
             }])
             ->orderBy('created_at', 'desc')
             ->get()
@@ -55,7 +59,18 @@ class MessageController extends Controller
                     'last_message' => $lastMessage->message,
                     'last_message_at' => $lastMessage->created_at,
                     'read' => $lastMessage->read,
-                    'unread_count' => $group->where('read', false)->count()
+                    'unread_count' => $group->where('read', false)->count(),
+                    'listing' => $lastMessage->listing ? [
+                        'id' => $lastMessage->listing->id,
+                        'name' => $lastMessage->listing->name,
+                        'image' => $lastMessage->listing->image,
+                        'price' => $lastMessage->listing->price,
+                        'description' => $lastMessage->listing->description,
+                        'location' => $lastMessage->listing->location,
+                        'category' => $lastMessage->listing->categories,
+                        'condition' => $lastMessage->listing->condition,
+                        'created_at' => $lastMessage->listing->created_at
+                    ] : null
                 ];
             })
             ->values();
@@ -84,6 +99,8 @@ class MessageController extends Controller
             })
             ->with(['sender' => function($query) {
                 $query->select('id', 'name', 'email');
+            }, 'listing' => function($query) {
+                $query->select('id', 'name', 'image', 'price', 'description', 'location', 'categories', 'condition', 'created_at');
             }])
             ->orderBy('created_at', 'asc')
             ->get();

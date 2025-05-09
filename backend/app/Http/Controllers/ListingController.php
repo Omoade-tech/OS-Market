@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Listing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -94,22 +93,16 @@ class ListingController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            Log::info('Starting listing update process', ['listing_id' => $id]);
-            Log::info('Raw request data:', $request->all());
-
+           
             $listing = Listing::find($id);
 
             if (!$listing) {
-                Log::error('Listing not found', ['listing_id' => $id]);
+        
                 return response()->json(['success' => false, 'message' => 'Listing not found.'], 404);
             }
 
             if ($listing->user_id !== Auth::id()) {
-                Log::error('Unauthorized update attempt', [
-                    'listing_id' => $id,
-                    'listing_user_id' => $listing->user_id,
-                    'auth_user_id' => Auth::id()
-                ]);
+                
                 return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
             }
 
@@ -124,12 +117,12 @@ class ListingController extends Controller
             ]);
 
             if ($validator->fails()) {
-                Log::error('Validation failed', ['errors' => $validator->errors()->toArray()]);
+            
                 return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
             }
 
             $data = $validator->validated();
-            Log::info('Validated data:', $data);
+            
 
             // Only update fields that were provided
             $updateData = [];
@@ -140,27 +133,25 @@ class ListingController extends Controller
             }
 
             if ($request->hasFile('image')) {
-                Log::info('Processing new image upload');
+            
                 // Delete old image if it exists
                 if ($listing->image && Storage::disk('public')->exists($listing->image)) {
                     Storage::disk('public')->delete($listing->image);
                 }
                 $path = $request->file('image')->store('listings', 'public');
                 $updateData['image'] = str_replace('public/', '', $path);
-                Log::info('New image path:', ['path' => $updateData['image']]);
+        
             }
 
             // Update the listing with only the provided fields
             if (!empty($updateData)) {
                 $listing->update($updateData);
-                Log::info('Listing updated successfully with data:', $updateData);
-            } else {
-                Log::warning('No data to update - all fields were empty or null');
-            }
+                
+            } 
 
             // Refresh the listing to get the latest data
             $listing->refresh();
-            Log::info('Updated listing data:', $listing->toArray());
+            
 
             return response()->json([
                 'success' => true,
@@ -180,10 +171,7 @@ class ListingController extends Controller
                 ]
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Error updating listing', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+        
             return response()->json([
                 'success' => false, 
                 'message' => 'Failed to update listing.', 

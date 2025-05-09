@@ -274,7 +274,7 @@ export default {
           return;
         }
 
-        const authStore = useAuthStore();
+        // const authStore = useAuthStore();
         const formData = new FormData();
         
         // Add all fields to FormData

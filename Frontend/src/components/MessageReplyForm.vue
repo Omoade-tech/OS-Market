@@ -52,6 +52,10 @@ export default {
       validator: (value) => {
         return value !== null && value !== undefined && value !== '';
       }
+    },
+    listing: {
+      type: Object,
+      default: null
     }
   },
 
@@ -101,11 +105,21 @@ export default {
       this.loading = true;
 
       try {
-        const response = await this.authStore.sendMessage({
+        const messageData = {
           receiver_id: this.receiverId,
           conversation_id: this.conversationId,
           message: this.reply.content.trim()
-        });
+        };
+
+        // Add listing information if available
+        if (this.listing) {
+          messageData.listing_id = this.listing.id;
+          messageData.listing_name = this.listing.name;
+          messageData.listing_image = this.listing.image;
+          messageData.listing_price = this.listing.price;
+        }
+
+        const response = await this.authStore.sendMessage(messageData);
 
         if (response.success) {
           this.reply.content = '';

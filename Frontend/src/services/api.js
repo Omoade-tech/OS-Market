@@ -248,30 +248,62 @@ export default {
     messages: {
         async sendMessage(messageData) {
             try {
-                const response = await apiClient.post('/messages/send', messageData);
+                console.log('API: Sending message with data:', messageData);
+                const response = await apiClient.post('/messages/send', {
+                    receiver_id: messageData.receiver_id,
+                    message: messageData.message,
+                    listing_id: messageData.listing_id
+                });
+                console.log('API: Send message response:', response.data);
                 return response.data;
             } catch (error) {
-                console.error('Failed to send message:', error);
+                console.error('API: Failed to send message:', error);
+                if (error.response) {
+                    console.error('API: Error response:', {
+                        status: error.response.status,
+                        data: error.response.data,
+                        headers: error.response.headers
+                    });
+                }
                 throw error;
             }
         },
 
         async getDashboardMessages() {
             try {
+                console.log('API: Getting dashboard messages');
                 const response = await apiClient.get('/messages/dashboard');
+                console.log('API: Dashboard messages response:', response.data);
                 return response.data;
             } catch (error) {
-                console.error('Failed to fetch dashboard messages:', error);
+                console.error('API: Failed to fetch dashboard messages:', error);
+                if (error.response) {
+                    console.error('API: Error response:', {
+                        status: error.response.status,
+                        data: error.response.data,
+                        headers: error.response.headers
+                    });
+                }
                 throw error;
             }
         },
 
         async getConversation(userId) {
             try {
+                console.log('API: Getting conversation for userId:', userId);
                 const response = await apiClient.get(`/messages/conversation/${userId}`);
+                console.log('API: Raw conversation response:', response);
+                console.log('API: Conversation data:', response.data);
                 return response.data;
             } catch (error) {
-                console.error('Failed to fetch conversation:', error);
+                console.error('API: Failed to fetch conversation:', error);
+                if (error.response) {
+                    console.error('API: Error response:', {
+                        status: error.response.status,
+                        data: error.response.data,
+                        headers: error.response.headers
+                    });
+                }
                 throw error;
             }
         }

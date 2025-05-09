@@ -1,5 +1,5 @@
 <template>
-  <div class="container login-page">
+  <div class="container-fluid login-page">
     <div class="row">
       <div class="col-md-6 d-none d-md-flex align-items-center justify-content-center">
         <div class="quote-container">
@@ -137,101 +137,194 @@ export default {
 <style scoped>
 .login-page {
   min-height: 100vh;
-  background-image: url('../assets/image/market-bg.jpg');
+  background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../assets/image/market-bg.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   position: relative;
-}
-
-.login-page::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1;
+  display: flex;
+  align-items: center;
 }
 
 .row {
   position: relative;
   z-index: 2;
+  width: 100%;
+  margin: 0;
 }
 
 .quote-container {
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  max-width: 80%;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-width: 90%;
+  margin: 2rem;
+  transition: transform 0.3s ease;
+}
+
+.quote-container:hover {
+  transform: translateY(-5px);
 }
 
 .quote-title {
-  color: #333;
-  font-size: 2rem;
+  color: #2c3e50;
+  font-size: 2.5rem;
   margin-bottom: 1.5rem;
   text-align: center;
+  font-weight: 700;
 }
 
 .quote-text {
-  color: #555;
-  font-size: 1.2rem;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
+  color: #34495e;
+  font-size: 1.3rem;
+  line-height: 1.8;
+  margin-bottom: 2rem;
   font-style: italic;
 }
 
 .quote-author {
-  color: #666;
+  color: #7f8c8d;
   text-align: right;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .login-card {
-  background-color: rgba(255, 255, 255, 0.95);
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.98);
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   width: 100%;
-  max-width: 400px;
+  max-width: 450px;
+  margin: 2rem;
+  transition: transform 0.3s ease;
+}
+
+.login-card:hover {
+  transform: translateY(-5px);
+}
+
+.login-card h2 {
+  color: #2c3e50;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
 }
 
 .input-group {
   position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.input-group input {
+  padding: 1rem 1.5rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background-color: #f8f9fa;
+}
+
+.input-group input:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+  outline: none;
 }
 
 .input-group i {
   position: absolute;
-  right: 10px;
+  right: 15px;
   top: 50%;
   transform: translateY(-50%);
+  color: #7f8c8d;
+  font-size: 1.2rem;
 }
 
 .input-group button[type="button"] {
   position: absolute;
-  right: 30px;
+  right: 45px;
   top: 50%;
   transform: translateY(-50%);
   background-color: transparent;
   border: none;
   padding: 0;
-  font-size: 14px;
+  font-size: 1rem;
   cursor: pointer;
+  color: #7f8c8d;
+  transition: color 0.3s ease;
 }
 
-.input-group button[type="button"] i {
-  font-size: 16px;
+.input-group button[type="button"]:hover {
+  color: #3498db;
 }
 
 .remember-me {
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
 
-button:disabled {
+.remember-me input[type="checkbox"] {
+  margin-right: 0.5rem;
+  width: 18px;
+  height: 18px;
+  accent-color: #3498db;
+}
+
+.remember-me label {
+  color: #7f8c8d;
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background-color: #3498db;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+.btn-primary:disabled {
+  background-color: #bdc3c7;
   cursor: not-allowed;
-  opacity: 0.7;
+  transform: none;
+  box-shadow: none;
+}
+
+.text-center {
+  margin-top: 1.5rem;
+}
+
+.text-center p {
+  color: #7f8c8d;
+  font-size: 1rem;
+}
+
+.text-center a {
+  color: #3498db;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.text-center a:hover {
+  color: #2980b9;
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {
@@ -241,20 +334,22 @@ button:disabled {
   
   .login-card {
     margin: 1rem;
+    padding: 2rem;
+  }
+
+  .login-card h2 {
+    font-size: 1.8rem;
+  }
+
+  .input-group input {
+    padding: 0.8rem 1.2rem;
   }
 }
 
-.text-center {
-  margin-top: 1rem;
-}
-
-.text-center a {
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s ease;
-}
-
-.text-center a:hover {
-  color: #0056b3;
+/* Loading spinner styles */
+.spinner-border {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-width: 0.2em;
 }
 </style>
