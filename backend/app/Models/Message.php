@@ -14,6 +14,7 @@ class Message extends Model
         'receiver_id',
         'message',
         'read',
+        'listing_id'
     ];
 
     protected $casts = [
@@ -34,5 +35,13 @@ class Message extends Model
     public function receiver()
     {
         return $this->belongsTo(User::class, 'receiver_id');
+    }
+
+    /**
+     * The listing associated with the message.
+     */
+    public function listing()
+    {
+        return $this->belongsTo(Listing::class);
     }
 }

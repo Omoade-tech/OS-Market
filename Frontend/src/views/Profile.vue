@@ -295,9 +295,6 @@ export default {
 
     handleImageUpload(event) {
       const file = event.target.files[0];
-      console.log('Selected file:', file);
-      console.log('File type:', file?.type);
-      console.log('File size:', file?.size);
       
       if (file) {
         // Validate file type
@@ -331,11 +328,7 @@ export default {
           lastModified: file.lastModified
         });
         
-        console.log('Created image file:', imageFile);
-        console.log('Image file type:', imageFile.type);
-        console.log('Image file instanceof File:', imageFile instanceof File);
-        console.log('Image file instanceof Blob:', imageFile instanceof Blob);
-
+    
         this.profileForm.image = imageFile;
       }
     },

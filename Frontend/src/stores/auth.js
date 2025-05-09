@@ -446,73 +446,74 @@ export const useAuthStore = defineStore('auth', {
 
         // Messages actions
         async sendMessage(messageData) {
-            this.loading = true;
-            this.error = null;
-
             try {
                 const response = await api.messages.sendMessage(messageData);
                 if (response.success) {
-                    this.messages.push(response.data);
-                    // Update the last message in conversations
-                    const conversationIndex = this.conversations.findIndex(
-                        conv => conv.id === messageData.receiver_id
-                    );
-                    if (conversationIndex !== -1) {
-                        this.conversations[conversationIndex].last_message = messageData.message;
-                        this.conversations[conversationIndex].last_message_at = new Date().toISOString();
-                    }
+                    // Update conversations if needed
+                    await this.fetchConversations();
                     return response;
                 }
-                throw new Error('Failed to send message');
+                throw new Error(response.message || 'Failed to send message');
             } catch (error) {
-                this.error = error.response?.data?.message || error.message || 'Failed to send message';
+                console.error('Error sending message:', error);
                 throw error;
-            } finally {
-                this.loading = false;
             }
         },
 
         async fetchConversations() {
-            this.loading = true;
-            this.error = null;
-
             try {
                 const response = await api.messages.getDashboardMessages();
                 if (response.success) {
-                    this.conversations = response.messages;
-                    this.unreadCount = response.unread_count || 0;
+                    // Format image URLs for all conversations with listings
+                    this.conversations = response.messages.map(conv => {
+                        if (conv.listing) {
+                            conv.listing.image = this.formatImageUrl(conv.listing.image);
+                        }
+                        return conv;
+                    });
+                    
+                    // Calculate total unread count
+                    this.unreadCount = this.conversations.reduce((total, conv) => total + (conv.unread_count || 0), 0);
                     return response;
                 }
-                throw new Error('Failed to fetch conversations');
+                throw new Error(response.message || 'Failed to fetch conversations');
             } catch (error) {
-                this.error = error.response?.data?.message || error.message || 'Failed to fetch conversations';
+                console.error('Error fetching conversations:', error);
                 throw error;
-            } finally {
-                this.loading = false;
             }
         },
 
         async fetchConversation(userId) {
-            this.loading = true;
-            this.error = null;
-
             try {
                 const response = await api.messages.getConversation(userId);
                 if (response.success) {
-                    this.messages = response.conversation;
+                    // Ensure the listing image URL is properly formatted
+                    const conversation = response.conversation[0];
+                    if (conversation?.listing) {
+                        conversation.listing.image = this.formatImageUrl(conversation.listing.image);
+                    }
+                    
                     this.currentConversation = {
-                        id: userId,
-                        messages: response.conversation
+                        ...conversation?.listing,
+                        messages: response.conversation,
+                        sender_id: userId
                     };
                     return response;
                 }
-                throw new Error('Failed to fetch conversation');
+                throw new Error(response.message || 'Failed to fetch conversation');
             } catch (error) {
-                this.error = error.response?.data?.message || error.message || 'Failed to fetch conversation';
+                console.error('Error fetching conversation:', error);
                 throw error;
-            } finally {
-                this.loading = false;
             }
+        },
+
+        formatImageUrl(image) {
+            if (!image) return null;
+            if (image.startsWith('http')) return image;
+            if (image.startsWith('storage/')) {
+                return `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/${image}`;
+            }
+            return `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/storage/${image}`;
         },
 
         clearCurrentConversation() {
