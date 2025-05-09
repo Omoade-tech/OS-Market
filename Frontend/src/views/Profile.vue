@@ -63,7 +63,7 @@
             </div>
             <div class="detail-item">
               <i class="fas fa-user-tag text-primary"></i>
-              <span class="badge bg-primary">{{ user.role }}</span>
+              <span class="badge bg-primary text-light">{{ user.role }}</span>
             </div>
             <div class="detail-item" v-if="user.phoneNumber">
               <i class="fas fa-phone text-primary"></i>

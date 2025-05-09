@@ -93,7 +93,7 @@
                     </p>
                     <span v-if="msg.sender_id === authStore.userId" 
                           :class="['text-xs', msg.read ? 'text-blue-100' : 'text-yellow-200']">
-                      {{ msg.read ? '✓ Read' : '✓ Sent' }}
+                      {{ msg.read ? ' Read' : ' Sent' }}
                     </span>
                   </div>
                 </div>

@@ -408,7 +408,7 @@ export const useAuthStore = defineStore('auth', {
                         description: listing.description,
                         price: listing.price,
                         location: listing.location,
-                        categories: listing.category,
+                        categories: listing.categories,
                         condition: listing.condition,
                         status: listing.status || 'active',
                         image: listing.image,
