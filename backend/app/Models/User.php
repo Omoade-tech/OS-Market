@@ -37,6 +37,24 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            // If the image path starts with http, return it as is
+            if (strpos($this->image, 'http') === 0) {
+                return $this->image;
+            }
+            
+            // For storage images, ensure proper URL construction
+            $imagePath = ltrim($this->image, '/');
+            $baseUrl = rtrim(config('app.url'), '/');
+            return "{$baseUrl}/storage/{$imagePath}";
+        }
+        return null;
+    }
+
     /**
      * Get all listings posted by the user (typically a seller).
      */

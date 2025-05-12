@@ -59,6 +59,12 @@
                 {{ user.status || 'Active' }}
               </span>
             </div>
+            <!-- Add dedicated upload button -->
+            <div class="upload-button-container">
+              <label for="profileImage" class="btn btn-outline-primary upload-button">
+                <i class="fas fa-upload me-2"></i>Upload New Photo
+              </label>
+            </div>
           </div>
 
           <!-- User Details Section -->
@@ -66,83 +72,83 @@
             <h4 class="user-name">{{ user.name }}</h4>
             
             <div class="details-grid">
-              <div class="detail-item">
+            <div class="detail-item">
                 <i class="fas fa-envelope"></i>
                 <div class="detail-content">
                   <span class="detail-label">Email</span>
                   <span class="detail-value">{{ user.email }}</span>
                 </div>
-              </div>
+            </div>
 
-              <div class="detail-item">
+            <div class="detail-item">
                 <i class="fas fa-user-tag"></i>
                 <div class="detail-content">
                   <span class="detail-label">Role</span>
                   <span class="badge bg-primary">{{ user.role }}</span>
                 </div>
-              </div>
+            </div>
 
-              <div class="detail-item" v-if="user.phoneNumber">
+            <div class="detail-item" v-if="user.phoneNumber">
                 <i class="fas fa-phone"></i>
                 <div class="detail-content">
                   <span class="detail-label">Phone</span>
                   <span class="detail-value">{{ user.phoneNumber }}</span>
                 </div>
-              </div>
+            </div>
 
-              <div class="detail-item" v-if="user.age">
+            <div class="detail-item" v-if="user.age">
                 <i class="fas fa-birthday-cake"></i>
                 <div class="detail-content">
                   <span class="detail-label">Age</span>
                   <span class="detail-value">{{ user.age }} years old</span>
                 </div>
-              </div>
+            </div>
 
-              <div class="detail-item" v-if="user.sex">
+            <div class="detail-item" v-if="user.sex">
                 <i class="fas fa-venus-mars"></i>
                 <div class="detail-content">
                   <span class="detail-label">Gender</span>
                   <span class="detail-value">{{ user.sex }}</span>
-                </div>
-              </div>
+            </div>
+            </div>
 
-              <div class="detail-item" v-if="user.address">
+            <div class="detail-item" v-if="user.address">
                 <i class="fas fa-map-marker-alt"></i>
                 <div class="detail-content">
                   <span class="detail-label">Address</span>
                   <span class="detail-value">{{ user.address }}</span>
                 </div>
-              </div>
+            </div>
 
-              <div class="detail-item" v-if="user.city">
+            <div class="detail-item" v-if="user.city">
                 <i class="fas fa-city"></i>
                 <div class="detail-content">
                   <span class="detail-label">City</span>
                   <span class="detail-value">{{ user.city }}</span>
                 </div>
-              </div>
+            </div>
 
-              <div class="detail-item" v-if="user.state">
+            <div class="detail-item" v-if="user.state">
                 <i class="fas fa-map"></i>
                 <div class="detail-content">
                   <span class="detail-label">State</span>
                   <span class="detail-value">{{ user.state }}</span>
                 </div>
-              </div>
+            </div>
 
-              <div class="detail-item" v-if="user.country">
+            <div class="detail-item" v-if="user.country">
                 <i class="fas fa-globe"></i>
                 <div class="detail-content">
                   <span class="detail-label">Country</span>
                   <span class="detail-value">{{ user.country }}</span>
                 </div>
               </div>
-            </div>
+          </div>
 
             <div class="profile-actions">
-              <button class="btn btn-primary" @click="openEditModal">
-                <i class="fas fa-edit me-2"></i>Edit Profile
-              </button>
+            <button class="btn btn-primary" @click="openEditModal">
+              <i class="fas fa-edit me-2"></i>Edit Profile
+            </button>
             </div>
           </div>
         </div>
@@ -194,14 +200,14 @@
                   <label for="phoneNumber" class="form-label">Phone Number</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                    <input type="tel" class="form-control" id="phoneNumber" v-model="profileForm.phoneNumber">
+                  <input type="tel" class="form-control" id="phoneNumber" v-model="profileForm.phoneNumber">
                   </div>
                 </div>
                 <div class="col-md-6">
                   <label for="age" class="form-label">Age</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-birthday-cake"></i></span>
-                    <input type="number" class="form-control" id="age" v-model="profileForm.age" min="1" max="120">
+                  <input type="number" class="form-control" id="age" v-model="profileForm.age" min="1" max="120">
                   </div>
                 </div>
               </div>
@@ -211,24 +217,24 @@
                   <label for="sex" class="form-label">Gender</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-venus-mars"></i></span>
-                    <select class="form-select" id="sex" v-model="profileForm.sex">
-                      <option value="">Select</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
+                  <select class="form-select" id="sex" v-model="profileForm.sex">
+                    <option value="">Select</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <label for="status" class="form-label">Status</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-heart"></i></span>
-                    <select class="form-select" id="status" v-model="profileForm.status">
-                      <option value="">Select</option>
-                      <option value="single">Single</option>
-                      <option value="married">Married</option>
-                      <option value="divorced">Divorced</option>
-                    </select>
+                  <select class="form-select" id="status" v-model="profileForm.status">
+                    <option value="">Select</option>
+                    <option value="single">Single</option>
+                    <option value="married">Married</option>
+                    <option value="divorced">Divorced</option>
+                  </select>
                   </div>
                 </div>
               </div>
@@ -237,8 +243,8 @@
                 <label for="address" class="form-label">Address</label>
                 <div class="input-group">
                   <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
-                  <input type="text" class="form-control" id="address" v-model="profileForm.address">
-                </div>
+                <input type="text" class="form-control" id="address" v-model="profileForm.address">
+              </div>
               </div>
 
               <div class="row mb-3">
@@ -253,14 +259,14 @@
                   <label for="state" class="form-label">State</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-map"></i></span>
-                    <input type="text" class="form-control" id="state" v-model="profileForm.state">
+                  <input type="text" class="form-control" id="state" v-model="profileForm.state">
                   </div>
                 </div>
                 <div class="col-md-4">
                   <label for="country" class="form-label">Country</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-globe"></i></span>
-                    <input type="text" class="form-control" id="country" v-model="profileForm.country">
+                  <input type="text" class="form-control" id="country" v-model="profileForm.country">
                   </div>
                 </div>
               </div>
@@ -363,8 +369,6 @@ export default {
       if (file) {
         // Validate file type
         const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
-        console.log('Valid types:', validTypes);
-        console.log('File type check:', validTypes.includes(file.type));
         
         if (!validTypes.includes(file.type)) {
           this.toast.error('Invalid file type. Please upload a JPEG, PNG, or GIF image.', {
@@ -376,7 +380,6 @@ export default {
 
         // Validate file size (2MB = 2 * 1024 * 1024 bytes)
         const maxSize = 2 * 1024 * 1024;
-        console.log('File size check:', file.size <= maxSize);
         
         if (file.size > maxSize) {
           this.toast.error('File size too large. Maximum size is 2MB.', {
@@ -386,15 +389,28 @@ export default {
           return;
         }
 
-        // Create a new File object to ensure proper type
-        const imageFile = new File([file], file.name, {
-          type: file.type,
-          lastModified: file.lastModified
-        });
-        
-    
-        this.profileForm.image = imageFile;
+        // Create a preview URL
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          // Update the user object with the preview URL
+          this.user = {
+            ...this.user,
+            image: e.target.result
+          };
+        };
+        reader.readAsDataURL(file);
+
+        // Store the file in the form
+        this.profileForm.image = file;
+
+        // Automatically submit the profile update
+        this.submitProfileUpdate();
       }
+    },
+
+    handleImageError() {
+      // Set default image if the current image fails to load
+      this.user.image = '/default-avatar.png';
     },
 
     async submitProfileUpdate() {
@@ -402,18 +418,50 @@ export default {
       this.updateError = null;
 
       try {
-        // Create a copy of the form data to avoid modifying the original
-        const formData = { ...this.profileForm };
+        // Create FormData object for multipart/form-data
+        const formData = new FormData();
+        
+        // Log initial form data
+        console.log('Initial profileForm data:', this.profileForm);
+        
+        // Add all form fields to FormData
+        Object.keys(this.profileForm).forEach(key => {
+          if (key === 'image' && this.profileForm[key] instanceof File) {
+            formData.append('image', this.profileForm[key]);
+            console.log('Adding image file:', {
+              name: this.profileForm[key].name,
+              type: this.profileForm[key].type,
+              size: this.profileForm[key].size
+            });
+          } else if (key !== 'image') {
+            const value = this.profileForm[key] || this.user[key] || '';
+            formData.append(key, value);
+            console.log(`Adding field ${key}:`, value);
+          }
+        });
+
+        // Log complete FormData contents
+        console.log('Complete FormData contents:');
+        for (let pair of formData.entries()) {
+          console.log(`${pair[0]}: ${pair[1]}`);
+        }
         
         // Ensure required fields are present
-        if (!formData.name || !formData.email) {
+        if (!formData.get('name') || !formData.get('email')) {
+          console.error('Missing required fields:', {
+            name: formData.get('name'),
+            email: formData.get('email')
+          });
           this.toast.error('Name and email are required fields', {
             timeout: 5000,
           });
           return;
         }
 
+        console.log('Sending profile update request...');
         const response = await this.authStore.updateProfile(formData);
+        console.log('Profile update response:', response);
+        
         this.user = response;
         this.modalInstance.hide();
         this.toast.success('Profile updated successfully!', {
@@ -421,10 +469,44 @@ export default {
         });
       } catch (error) {
         console.error('Error updating profile:', error);
-        this.updateError = error.message || 'Failed to update profile';
-        this.toast.error(this.updateError, {
-          timeout: 5000,
-        });
+        
+        // Enhanced error logging
+        if (error.response) {
+          console.error('Error response details:', {
+            status: error.response.status,
+            statusText: error.response.statusText,
+            data: error.response.data,
+            headers: error.response.headers
+          });
+        }
+        
+        // Handle validation errors
+        if (error.response?.status === 422) {
+          const validationErrors = error.response.data.errors;
+          console.error('Validation errors:', validationErrors);
+          
+          if (validationErrors) {
+            // Show each validation error
+            Object.keys(validationErrors).forEach(field => {
+              console.error(`Validation error for ${field}:`, validationErrors[field]);
+              this.toast.error(`${field}: ${validationErrors[field].join(', ')}`, {
+                timeout: 5000,
+              });
+            });
+          } else {
+            console.error('Validation failed without specific errors:', error.response.data);
+            this.toast.error(error.response.data.message || 'Validation failed', {
+              timeout: 5000,
+            });
+          }
+        } else {
+          console.error('Non-validation error:', error.message);
+          this.toast.error(error.response?.data?.message || error.message || 'Failed to update profile', {
+            timeout: 5000,
+          });
+        }
+        
+        this.updateError = error.response?.data?.message || error.message || 'Failed to update profile';
       } finally {
         this.updating = false;
       }
@@ -792,5 +874,21 @@ export default {
   .profile-actions .btn {
     width: 100%;
   }
+}
+
+.upload-button-container {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.upload-button {
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.upload-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
 }
 </style>

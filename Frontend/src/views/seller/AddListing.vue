@@ -1,38 +1,36 @@
 <template>
   <div class="add-listing-container">
-    <div class="card">
-      <div class="card-header">
-        <h4>Add New Listing</h4>
+    <div class="page-header">
+      <h2>Add New Listing</h2>
+      <p class="subtitle">Create a new listing to showcase your items to potential buyers</p>
       </div>
-      <div class="card-body">
+
+    <div class="listing-form-container">
+      <div class="form-card">
         <form @submit.prevent="submitListing">
-          <div class="mb-3">
-            <label for="name" class="form-label">Items Name</label>
+          <!-- Basic Information Section -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <i class="fas fa-info-circle"></i>
+              Basic Information
+            </h3>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="name" class="form-label">Item Name</label>
             <input 
               type="text" 
               class="form-control" 
               id="name" 
               v-model="form.name" 
               :class="{'is-invalid': errors.name}"
+                  placeholder="Enter item name"
               required
             >
             <div class="invalid-feedback" v-if="errors.name">{{ errors.name[0] }}</div>
           </div>
 
-          <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea 
-              class="form-control" 
-              id="description" 
-              v-model="form.description" 
-              rows="4" 
-              :class="{'is-invalid': errors.description}"
-              required
-            ></textarea>
-            <div class="invalid-feedback" v-if="errors.description">{{ errors.description[0] }}</div>
-          </div>
-
-          <div class="mb-3">
+              <div class="form-group">
             <label for="price" class="form-label">Price</label>
             <div class="input-group">
               <span class="input-group-text">$</span>
@@ -43,14 +41,39 @@
                 v-model="form.price" 
                 step="0.01" 
                 min="0"
+                    placeholder="0.00"
                 :class="{'is-invalid': errors.price}"
                 required
               >
             </div>
             <div class="invalid-feedback" v-if="errors.price">{{ errors.price[0] }}</div>
           </div>
+            </div>
 
-          <div class="mb-3">
+            <div class="form-group">
+              <label for="description" class="form-label">Description</label>
+              <textarea 
+                class="form-control" 
+                id="description" 
+                v-model="form.description" 
+                rows="4" 
+                :class="{'is-invalid': errors.description}"
+                placeholder="Describe your item in detail..."
+                required
+              ></textarea>
+              <div class="invalid-feedback" v-if="errors.description">{{ errors.description[0] }}</div>
+            </div>
+          </div>
+
+          <!-- Category and Condition Section -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <i class="fas fa-tags"></i>
+              Category & Condition
+            </h3>
+            
+            <div class="form-grid">
+              <div class="form-group">
             <label for="category" class="form-label">Category</label>
             <select 
               class="form-select" 
@@ -80,7 +103,7 @@
             <div class="invalid-feedback" v-if="errors.categories">{{ errors.categories[0] }}</div>
           </div>
 
-          <div class="mb-3">
+              <div class="form-group">
             <label for="condition" class="form-label">Condition</label>
             <select 
               class="form-select" 
@@ -97,37 +120,77 @@
             </select>
             <div class="invalid-feedback" v-if="errors.condition">{{ errors.condition[0] }}</div>
           </div>
+            </div>
+          </div>
 
-          <div class="mb-3">
-            <label for="location" class="form-label">Location</label>
+          <!-- Location Section -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <i class="fas fa-map-marker-alt"></i>
+              Location
+            </h3>
+            
+            <div class="form-group">
+              <label for="location" class="form-label">Item Location</label>
             <input 
               type="text" 
               class="form-control" 
               id="location" 
               v-model="form.location" 
               :class="{'is-invalid': errors.location}"
+                placeholder="Enter item location"
               required
             >
             <div class="invalid-feedback" v-if="errors.location">{{ errors.location[0] }}</div>
           </div>
+          </div>
 
-          <div class="mb-3">
-            <label for="image" class="form-label">Image</label>
+          <!-- Image Upload Section -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <i class="fas fa-image"></i>
+              Images
+            </h3>
+            
+            <div class="image-upload-container">
+              <div class="upload-area" 
+                   :class="{'has-image': form.image}"
+                   @click="triggerFileInput"
+                   @dragover.prevent
+                   @drop.prevent="handleDrop">
             <input 
               type="file" 
-              class="form-control" 
-              id="image" 
+                  ref="fileInput"
+                  class="file-input" 
               @change="handleImageUpload"
               accept="image/jpeg,image/png,image/jpg"
               :class="{'is-invalid': errors.image}"
             >
+                <div class="upload-content" v-if="!form.image">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <p>Drag & drop your image here or click to browse</p>
+                  <small>Accepted formats: JPG, JPEG, PNG (max 5MB)</small>
+                </div>
+                <div class="preview-content" v-else>
+                  <img :src="imagePreview" alt="Preview" class="image-preview">
+                  <button type="button" class="btn btn-danger btn-sm remove-image" @click.stop="removeImage">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
             <div class="invalid-feedback" v-if="errors.image">{{ errors.image[0] }}</div>
-            <small class="form-text text-muted">Accepted formats: JPG, JPEG, PNG</small>
+            </div>
           </div>
 
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" @click="resetForm">
+              <i class="fas fa-undo"></i> Reset
+            </button>
           <button type="submit" class="btn btn-primary" :disabled="loading">
+              <i class="fas" :class="loading ? 'fa-spinner fa-spin' : 'fa-plus'"></i>
             {{ loading ? 'Submitting...' : 'Add Listing' }}
           </button>
+          </div>
         </form>
       </div>
     </div>
@@ -159,18 +222,31 @@ export default {
         image: null
       },
       errors: {},
-      loading: false
+      loading: false,
+      imagePreview: null
     }
   },
   methods: {
+    triggerFileInput() {
+      this.$refs.fileInput.click();
+    },
+    handleDrop(event) {
+      const file = event.dataTransfer.files[0];
+      if (file) {
+        this.processImageFile(file);
+      }
+    },
     handleImageUpload(event) {
       const file = event.target.files[0];
       if (file) {
+        this.processImageFile(file);
+      }
+    },
+    processImageFile(file) {
         // Validate file type
         const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
         if (!validTypes.includes(file.type)) {
           this.errors.image = ['Please upload a valid image file (JPG, JPEG, or PNG)'];
-          event.target.value = '';
           return;
         }
         
@@ -178,13 +254,37 @@ export default {
         const maxSize = 5 * 1024 * 1024; // 5MB in bytes
         if (file.size > maxSize) {
           this.errors.image = ['Image size should not exceed 5MB'];
-          event.target.value = '';
           return;
         }
 
         this.form.image = file;
         this.errors.image = null;
-      }
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.imagePreview = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    },
+    removeImage() {
+      this.form.image = null;
+      this.imagePreview = null;
+      this.$refs.fileInput.value = '';
+    },
+    resetForm() {
+      this.form = {
+        name: '',
+        description: '',
+        price: '',
+        categories: '',
+        condition: '',
+        location: '',
+        image: null
+      };
+      this.errors = {};
+      this.imagePreview = null;
+      this.$refs.fileInput.value = '';
     },
     validateForm() {
       const errors = {};
@@ -235,18 +335,7 @@ export default {
         // Create FormData object
         const formData = new FormData();
         
-        // Log the form data before sending
-        console.log('Form data before sending:', {
-          name: this.form.name,
-          description: this.form.description,
-          price: this.form.price,
-          categories: this.form.categories,
-          condition: this.form.condition,
-          location: this.form.location,
-          hasImage: !!this.form.image
-        });
-
-        // Ensure all required fields are present and properly formatted
+        // Add form fields to FormData
         formData.append('name', this.form.name.trim());
         formData.append('description', this.form.description.trim());
         formData.append('price', parseFloat(this.form.price));
@@ -254,14 +343,8 @@ export default {
         formData.append('condition', this.form.condition);
         formData.append('location', this.form.location.trim());
         
-        // Only append image if it exists
         if (this.form.image instanceof File) {
           formData.append('image', this.form.image);
-        }
-
-        // Log FormData contents for debugging
-        for (let pair of formData.entries()) {
-          console.log('FormData entry:', pair[0], pair[1]);
         }
 
         const response = await this.authStore.createListing(formData);
@@ -276,7 +359,6 @@ export default {
         
         if (error.response?.status === 422) {
           this.errors = error.response.data.errors;
-          console.log('Validation errors:', error.response.data.errors);
           this.toast.error('Please correct the errors in the form.', {
             timeout: 5000,
           });
@@ -292,3 +374,244 @@ export default {
   }
 }
 </script> 
+
+<style scoped>
+.add-listing-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.page-header h2 {
+  color: #2c3e50;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.listing-form-container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-card {
+  padding: 2rem;
+}
+
+.form-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+}
+
+.form-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.section-title {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title i {
+  color: #3498db;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.form-control {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.form-select {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.form-select:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.image-upload-container {
+  margin-top: 1rem;
+}
+
+.upload-area {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-area:hover {
+  border-color: #3498db;
+  background-color: #f8f9fa;
+}
+
+.upload-area.has-image {
+  border-style: solid;
+  padding: 0;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-content {
+  color: #666;
+}
+
+.upload-content i {
+  font-size: 3rem;
+  color: #3498db;
+  margin-bottom: 1rem;
+}
+
+.preview-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.remove-image {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 0.5rem;
+  border-radius: 50%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.btn-primary:hover {
+  background-color: #2980b9;
+  border-color: #2980b9;
+}
+
+.btn-secondary {
+  background-color: #95a5a6;
+  border-color: #95a5a6;
+}
+
+.btn-secondary:hover {
+  background-color: #7f8c8d;
+  border-color: #7f8c8d;
+}
+
+.btn-danger {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+.btn-danger:hover {
+  background-color: #c0392b;
+  border-color: #c0392b;
+}
+
+.invalid-feedback {
+  color: #e74c3c;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.is-invalid {
+  border-color: #e74c3c !important;
+}
+
+.is-invalid:focus {
+  box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25) !important;
+}
+
+@media (max-width: 768px) {
+  .add-listing-container {
+    padding: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-card {
+    padding: 1rem;
+  }
+
+  .page-header h2 {
+    font-size: 2rem;
+  }
+}
+</style> 

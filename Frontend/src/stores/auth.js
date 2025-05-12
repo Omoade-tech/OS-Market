@@ -316,18 +316,15 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        async deleteListing(id) {
-            this.loading = true;
-            this.error = null;
-
+        async deleteListing(listingId) {
             try {
-                await api.deleteListing(id);
-                this.listings = this.listings.filter(listing => listing.id !== id);
+                const response = await api.listings.delete(listingId);
+                // Remove the deleted listing from the local state
+                this.listings = this.listings.filter(listing => listing.id !== listingId);
+                return response;
             } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to delete listing';
+                console.error('Error deleting listing:', error);
                 throw error;
-            } finally {
-                this.loading = false;
             }
         },
 
@@ -422,22 +419,6 @@ export const useAuthStore = defineStore('auth', {
             } catch (error) {
                 this.error = error.message || 'Failed to fetch seller listings';
                 this.listings = [];
-                throw error;
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        async deleteListing(listingId) {
-            this.loading = true;
-            this.error = null;
-
-            try {
-                const response = await api.deleteListing(listingId);
-                this.listings = this.listings.filter(listing => listing.id !== listingId);
-                return response;
-            } catch (error) {
-                this.error = error.response?.data?.message || 'Failed to delete listing';
                 throw error;
             } finally {
                 this.loading = false;
