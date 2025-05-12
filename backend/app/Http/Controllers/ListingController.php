@@ -316,18 +316,13 @@ class ListingController extends Controller
                 'used-fair'
             ];
 
-            // Get unique locations from existing listings
-            $locations = Listing::where('status', 'approved')
-                ->distinct()
-                ->pluck('location')
-                ->toArray();
+          
 
             return response()->json([
                 'success' => true,
                 'data' => [
                     'categories' => $categories,
                     'conditions' => $conditions,
-                    'locations' => $locations
                 ]
             ], 200);
         } catch (\Exception $e) {

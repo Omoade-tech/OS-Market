@@ -1,6 +1,5 @@
 <template>
   <div class="seller-dashboard" v-if="isAuthenticated">
-    <SellerSidebar />
     <div class="main-content">
       <div class="dashboard-grid">
         <div class="listings-section">
@@ -20,14 +19,12 @@
 <script>
 import { computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
-import SellerSidebar from '@/components/SellerSidebar.vue';
 import ViewSellerListing from '@/views/seller/ViewSellerListing.vue';
 import Profile from '@/views/Profile.vue';
 
 export default {
   name: 'SellerDashboard',
   components: {
-    SellerSidebar,
     ViewSellerListing,
     Profile
   },
@@ -49,7 +46,6 @@ export default {
 
 .main-content {
   flex: 1;
-  margin-left: 250px;
   padding: 20px;
   background-color: #f8f9fa;
   min-height: 100vh;
@@ -87,8 +83,6 @@ export default {
 
 @media (max-width: 768px) {
   .main-content {
-    margin-left: 0;
-    margin-top: 60px;
     padding: 15px;
   }
 }

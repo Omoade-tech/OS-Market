@@ -1,17 +1,17 @@
 <template>
-  <div class="container profile-container mt-5">
-    <div class="card profile-card">
-      <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">User Profile</h5>
+  <div class="profile-container">
+    <div class="profile-card">
+      <div class="card-header">
+        <h5><i class="fas fa-user-circle me-2"></i>User Profile</h5>
       </div>
 
       <!-- Loading state -->
       <div class="card-body" v-if="loading">
-        <div class="text-center py-4">
-          <div class="spinner-border text-primary" role="status">
+        <div class="loading-container">
+          <div class="spinner-border" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
-          <p class="mt-2 text-muted">Loading profile...</p>
+          <p class="loading-text">Loading profile...</p>
         </div>
       </div>
 
@@ -20,9 +20,11 @@
         <div class="alert alert-danger">
           <i class="fas fa-exclamation-circle me-2"></i>
           <strong>Error:</strong> {{ error }}
-          <div v-if="isAuthError" class="mt-2">
+          <div v-if="isAuthError" class="mt-3">
             <p>You may need to login again.</p>
-            <button class="btn btn-primary" @click="redirectToLogin">Go to Login</button>
+            <button class="btn btn-primary" @click="redirectToLogin">
+              <i class="fas fa-sign-in-alt me-2"></i>Go to Login
+            </button>
           </div>
         </div>
       </div>
@@ -31,7 +33,7 @@
       <div class="card-body" v-else-if="user">
         <div class="profile-content">
           <!-- Profile Image Section -->
-          <div class="profile-image-section text-center mb-4">
+          <div class="profile-image-section">
             <div class="profile-image-container">
               <img 
                 :src="user.image || '/default-avatar.png'" 
@@ -52,57 +54,96 @@
                 >
               </div>
             </div>
+            <div class="profile-status">
+              <span class="status-badge" :class="user.status?.toLowerCase()">
+                {{ user.status || 'Active' }}
+              </span>
+            </div>
           </div>
 
           <!-- User Details Section -->
           <div class="user-details">
-            <h4 class="user-name mb-3">{{ user.name }}</h4>
-            <div class="detail-item">
-              <i class="fas fa-envelope text-primary"></i>
-              <span>{{ user.email }}</span>
-            </div>
-            <div class="detail-item">
-              <i class="fas fa-user-tag text-primary"></i>
-              <span class="badge bg-primary text-light">{{ user.role }}</span>
-            </div>
-            <div class="detail-item" v-if="user.phoneNumber">
-              <i class="fas fa-phone text-primary"></i>
-              <span>{{ user.phoneNumber }}</span>
-            </div>
-            <div class="detail-item" v-if="user.age">
-              <i class="fas fa-birthday-cake text-primary"></i>
-              <span>{{ user.age }} years old</span>
-            </div>
-            <div class="detail-item" v-if="user.sex">
-              <i class="fas fa-venus-mars text-primary"></i>
-              <span>{{ user.sex }}</span>
-            </div>
-            <div class="detail-item" v-if="user.status">
-              <i class="fas fa-heart text-primary"></i>
-              <span>{{ user.status }}</span>
-            </div>
-            <div class="detail-item" v-if="user.address">
-              <i class="fas fa-map-marker-alt text-primary"></i>
-              <span>{{ user.address }}</span>
-            </div>
-            <div class="detail-item" v-if="user.city">
-              <i class="fas fa-city text-primary"></i>
-              <span>{{ user.city }}</span>
-            </div>
-            <div class="detail-item" v-if="user.state">
-              <i class="fas fa-map text-primary"></i>
-              <span>{{ user.state }}</span>
-            </div>
-            <div class="detail-item" v-if="user.country">
-              <i class="fas fa-globe text-primary"></i>
-              <span>{{ user.country }}</span>
-            </div>
-          </div>
+            <h4 class="user-name">{{ user.name }}</h4>
+            
+            <div class="details-grid">
+              <div class="detail-item">
+                <i class="fas fa-envelope"></i>
+                <div class="detail-content">
+                  <span class="detail-label">Email</span>
+                  <span class="detail-value">{{ user.email }}</span>
+                </div>
+              </div>
 
-          <div class="text-center mt-4">
-            <button class="btn btn-primary" @click="openEditModal">
-              <i class="fas fa-edit me-2"></i>Edit Profile
-            </button>
+              <div class="detail-item">
+                <i class="fas fa-user-tag"></i>
+                <div class="detail-content">
+                  <span class="detail-label">Role</span>
+                  <span class="badge bg-primary">{{ user.role }}</span>
+                </div>
+              </div>
+
+              <div class="detail-item" v-if="user.phoneNumber">
+                <i class="fas fa-phone"></i>
+                <div class="detail-content">
+                  <span class="detail-label">Phone</span>
+                  <span class="detail-value">{{ user.phoneNumber }}</span>
+                </div>
+              </div>
+
+              <div class="detail-item" v-if="user.age">
+                <i class="fas fa-birthday-cake"></i>
+                <div class="detail-content">
+                  <span class="detail-label">Age</span>
+                  <span class="detail-value">{{ user.age }} years old</span>
+                </div>
+              </div>
+
+              <div class="detail-item" v-if="user.sex">
+                <i class="fas fa-venus-mars"></i>
+                <div class="detail-content">
+                  <span class="detail-label">Gender</span>
+                  <span class="detail-value">{{ user.sex }}</span>
+                </div>
+              </div>
+
+              <div class="detail-item" v-if="user.address">
+                <i class="fas fa-map-marker-alt"></i>
+                <div class="detail-content">
+                  <span class="detail-label">Address</span>
+                  <span class="detail-value">{{ user.address }}</span>
+                </div>
+              </div>
+
+              <div class="detail-item" v-if="user.city">
+                <i class="fas fa-city"></i>
+                <div class="detail-content">
+                  <span class="detail-label">City</span>
+                  <span class="detail-value">{{ user.city }}</span>
+                </div>
+              </div>
+
+              <div class="detail-item" v-if="user.state">
+                <i class="fas fa-map"></i>
+                <div class="detail-content">
+                  <span class="detail-label">State</span>
+                  <span class="detail-value">{{ user.state }}</span>
+                </div>
+              </div>
+
+              <div class="detail-item" v-if="user.country">
+                <i class="fas fa-globe"></i>
+                <div class="detail-content">
+                  <span class="detail-label">Country</span>
+                  <span class="detail-value">{{ user.country }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-actions">
+              <button class="btn btn-primary" @click="openEditModal">
+                <i class="fas fa-edit me-2"></i>Edit Profile
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -112,7 +153,9 @@
         <div class="alert alert-warning">
           <i class="fas fa-exclamation-triangle me-2"></i>
           <p class="mb-0">No profile data available.</p>
-          <button class="btn btn-primary mt-2" @click="fetchUserProfile">Try Again</button>
+          <button class="btn btn-primary mt-3" @click="fetchUserProfile">
+            <i class="fas fa-sync-alt me-2"></i>Try Again
+          </button>
         </div>
       </div>
     </div>
@@ -121,7 +164,7 @@
     <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
+          <div class="modal-header">
             <h5 class="modal-title" id="editProfileModalLabel">
               <i class="fas fa-user-edit me-2"></i>Edit Profile
             </h5>
@@ -129,7 +172,6 @@
           </div>
           <div class="modal-body">
             <form id="profileForm" @submit.prevent="submitProfileUpdate">
-              <!-- Existing form fields with updated styling -->
               <div class="row mb-3">
                 <div class="col-md-6">
                   <label for="name" class="form-label">Name</label>
@@ -147,57 +189,79 @@
                 </div>
               </div>
 
-              <!-- Rest of the form fields with similar styling -->
               <div class="row mb-3">
                 <div class="col-md-6">
                   <label for="phoneNumber" class="form-label">Phone Number</label>
-                  <input type="tel" class="form-control" id="phoneNumber" v-model="profileForm.phoneNumber">
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                    <input type="tel" class="form-control" id="phoneNumber" v-model="profileForm.phoneNumber">
+                  </div>
                 </div>
                 <div class="col-md-6">
                   <label for="age" class="form-label">Age</label>
-                  <input type="number" class="form-control" id="age" v-model="profileForm.age" min="1" max="120">
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-birthday-cake"></i></span>
+                    <input type="number" class="form-control" id="age" v-model="profileForm.age" min="1" max="120">
+                  </div>
                 </div>
               </div>
 
               <div class="row mb-3">
                 <div class="col-md-6">
-                  <label for="sex" class="form-label">Sex</label>
-                  <select class="form-select" id="sex" v-model="profileForm.sex">
-                    <option value="">Select</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
+                  <label for="sex" class="form-label">Gender</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-venus-mars"></i></span>
+                    <select class="form-select" id="sex" v-model="profileForm.sex">
+                      <option value="">Select</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
                 </div>
                 <div class="col-md-6">
                   <label for="status" class="form-label">Status</label>
-                  <select class="form-select" id="status" v-model="profileForm.status">
-                    <option value="">Select</option>
-                    <option value="single">Single</option>
-                    <option value="married">Married</option>
-                    <option value="divorced">Divorced</option>
-                  </select>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-heart"></i></span>
+                    <select class="form-select" id="status" v-model="profileForm.status">
+                      <option value="">Select</option>
+                      <option value="single">Single</option>
+                      <option value="married">Married</option>
+                      <option value="divorced">Divorced</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
               <div class="mb-3">
                 <label for="address" class="form-label">Address</label>
-                <input type="text" class="form-control" id="address" v-model="profileForm.address">
-              </div>
-
-              <div class="mb-3">
-                <label for="city" class="form-label">City</label>
-                <input type="text" class="form-control" id="city" v-model="profileForm.city">
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                  <input type="text" class="form-control" id="address" v-model="profileForm.address">
+                </div>
               </div>
 
               <div class="row mb-3">
-                <div class="col-md-6">
-                  <label for="state" class="form-label">State</label>
-                  <input type="text" class="form-control" id="state" v-model="profileForm.state">
+                <div class="col-md-4">
+                  <label for="city" class="form-label">City</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-city"></i></span>
+                    <input type="text" class="form-control" id="city" v-model="profileForm.city">
+                  </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                  <label for="state" class="form-label">State</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-map"></i></span>
+                    <input type="text" class="form-control" id="state" v-model="profileForm.state">
+                  </div>
+                </div>
+                <div class="col-md-4">
                   <label for="country" class="form-label">Country</label>
-                  <input type="text" class="form-control" id="country" v-model="profileForm.country">
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-globe"></i></span>
+                    <input type="text" class="form-control" id="country" v-model="profileForm.country">
+                  </div>
                 </div>
               </div>
 
@@ -375,39 +439,64 @@ export default {
 
 <style scoped>
 .profile-container {
-  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #f0f8ff;
+  min-height: 100vh;
 }
 
 .profile-card {
   border: none;
   border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  background: #ffffff;
 }
 
 .card-header {
-  border-radius: 15px 15px 0 0 !important;
-  padding: 1rem;
+  background: linear-gradient(135deg, #3498db, #2980b9) !important;
+  padding: 1.5rem;
+  border-bottom: none;
+}
+
+.card-header h5 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.profile-content {
+  padding: 2rem;
 }
 
 .profile-image-section {
   position: relative;
+  margin-bottom: 3rem;
 }
 
 .profile-image-container {
   position: relative;
-  width: 150px;
-  height: 150px;
+  width: 200px;
+  height: 200px;
   margin: 0 auto;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 5px solid #ffffff;
 }
 
 .profile-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.profile-image:hover {
+  transform: scale(1.05);
 }
 
 .image-overlay {
@@ -416,7 +505,7 @@ export default {
   left: 0;
   right: 0;
   background: rgba(0, 0, 0, 0.5);
-  padding: 8px;
+  padding: 0.5rem;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -429,90 +518,279 @@ export default {
   color: white;
   cursor: pointer;
   font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.upload-btn:hover {
+  transform: scale(1.1);
 }
 
 .user-details {
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 10px;
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .user-name {
   color: #2c3e50;
+  font-size: 2rem;
   font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.user-name::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  border-radius: 3px;
 }
 
 .detail-item {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
-  padding: 8px;
-  background: white;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  background: #f8f9fa;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.detail-item:hover {
+  transform: translateX(5px);
+  background: #f0f8ff;
 }
 
 .detail-item i {
+  font-size: 1.2rem;
+  margin-right: 1rem;
   width: 24px;
-  margin-right: 12px;
+  text-align: center;
 }
 
 .detail-item span {
   color: #2c3e50;
+  font-size: 1.1rem;
 }
 
 .badge {
-  padding: 6px 12px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
+  border-radius: 20px;
+}
+
+/* Modal Styles */
+.modal-content {
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #3498db, #2980b9) !important;
+  border-bottom: none;
+  padding: 1.5rem;
+}
+
+.modal-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.form-label {
+  color: #2c3e50;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  color: #3498db;
 }
 
 .btn {
-  padding: 8px 20px;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.modal-content {
-  border-radius: 15px;
+.btn-primary {
+  background: linear-gradient(135deg, #3498db, #2980b9);
   border: none;
 }
 
-.modal-header {
-  border-radius: 15px 15px 0 0;
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
 }
 
-.input-group-text {
-  background-color: #f8f9fa;
-  border-right: none;
+.btn-secondary {
+  background: #f8f9fa;
+  color: #2c3e50;
+  border: 1px solid #e0e0e0;
 }
 
-.form-control {
-  border-left: none;
+.btn-secondary:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
 }
 
-.form-control:focus {
-  box-shadow: none;
-  border-color: #ced4da;
+/* Loading and Error States */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+  color: #3498db;
+}
+
+.alert {
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+}
+
+.alert-danger {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.alert-warning {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 1rem;
+  }
+
+  .profile-content {
+    padding: 1rem;
+  }
+
+  .profile-image-container {
+    width: 150px;
+    height: 150px;
+  }
+
+  .user-name {
+    font-size: 1.5rem;
+  }
+
+  .detail-item {
+    padding: 0.75rem;
+  }
+
+  .detail-item span {
+    font-size: 1rem;
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.loading-text {
+  margin-top: 1rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.profile-status {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.status-badge {
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-badge.active {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.status-badge.inactive {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  margin-left: 1rem;
+}
+
+.detail-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.detail-value {
+  font-size: 1.1rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e0e0e0;
 }
 
 @media (max-width: 768px) {
-  .profile-container {
-    padding: 10px;
+  .details-grid {
+    grid-template-columns: 1fr;
   }
   
-  .profile-image-container {
-    width: 120px;
-    height: 120px;
+  .profile-actions {
+    flex-direction: column;
+    gap: 1rem;
   }
   
-  .user-details {
-    padding: 15px;
+  .profile-actions .btn {
+    width: 100%;
   }
 }
 </style>
