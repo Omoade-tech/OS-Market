@@ -9,13 +9,15 @@
             Please <router-link to="/login">login</router-link> to view listings.
           </div>
   
-          <!-- Search Component -->
-          <SearchComponent 
-            v-else 
-            @search-results="handleSearchResults"
-            @search-error="handleSearchError"
-            @clear-filters="handleClearFilters"
-          />
+          <!-- Search Component with sticky wrapper -->
+          <div class="sticky-search-wrapper">
+            <SearchComponent 
+              v-if="isAuthenticated"
+              @search-results="handleSearchResults"
+              @search-error="handleSearchError"
+              @clear-filters="handleClearFilters"
+            />
+          </div>
   
           <!-- Loading State -->
           <div v-if="loading" class="text-center">
@@ -46,7 +48,7 @@
               Found {{ pagination.total }} listings matching your search criteria.
             </div>
   
-            <div class="row g-5">
+            <div class="row g-5 mt-1">
               <div v-for="listing in listings" :key="listing.id" class="col-md-4 col-sm-6">
                 <div class="card h-100 listing-card">
                   <div class="card-img-container">
@@ -342,20 +344,7 @@
     background-color: #2980b9;
   }
   
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .card-img-container {
-      height: 180px;
-    }
-    
-    .price-tag {
-      font-size: 1.1rem;
-    }
-  }
-  
-  .pagination {
-    margin-bottom: 0;
-  }
+ 
   
   .page-link {
     color: #3498db;
@@ -383,5 +372,39 @@
   
   .text-muted {
     font-size: 0.9rem;
+  }
+  
+  .sticky-search-wrapper {
+    position: sticky;
+    top: 8px; 
+    z-index: 100;
+    background: white;
+    padding: 5px 0;
+    margin-bottom: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+  
+  /* Add smooth transition for the sticky effect */
+  .sticky-search-wrapper {
+    transition: all 0.3s ease;
+  }
+  
+  .sticky-search-wrapper.sticky {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+   /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .card-img-container {
+      height: 180px;
+    }
+    
+    .price-tag {
+      font-size: 1.1rem;
+    }
+  }
+  
+  .pagination {
+    margin-bottom: 0;
   }
   </style>

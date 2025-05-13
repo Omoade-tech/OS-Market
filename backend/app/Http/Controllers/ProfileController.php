@@ -35,7 +35,7 @@ class ProfileController extends Controller
                     'city' => $user->city,
                     'state' => $user->state,
                     'country' => $user->country,
-                    'image' => $user->image ? Storage::url($user->image) : null,
+                    'image' => $user->image_url,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at
                 ]
@@ -81,12 +81,12 @@ class ProfileController extends Controller
             // Handle image upload if provided
             if ($request->hasFile('image')) {
                 // Delete old image if exists
-                if ($user->image && Storage::exists($user->image)) {
-                    Storage::delete($user->image);
+                if ($user->image && Storage::disk('public')->exists($user->image)) {
+                    Storage::disk('public')->delete($user->image);
                 }
                 
                 $path = $request->file('image')->store('profile_images', 'public');
-                $validated['image'] = $path;
+                $validated['image'] = str_replace('public/', '', $path);
             }
 
             // Update user profile
@@ -111,7 +111,7 @@ class ProfileController extends Controller
                     'city' => $user->city,
                     'state' => $user->state,
                     'country' => $user->country,
-                    'image' => $user->image ? Storage::url($user->image) : null,
+                    'image' => $user->image_url,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at
                 ]

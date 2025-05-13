@@ -207,16 +207,9 @@ export default {
         const authStore = useAuthStore();
         await authStore.fetchSellerListings();
         this.listings = authStore.listings;
-        console.log('API URL:', this.apiUrl);
-        console.log('Listings:', this.listings);
         if (this.listings.length > 0) {
           const firstListing = this.listings[0];
-          console.log('First listing image data:', {
-            image: firstListing.image,
-            image_url: firstListing.image_url,
-            full_url: `${this.apiUrl}/storage/${firstListing.image}`,
-            final_url: firstListing.image_url || `${this.apiUrl}/storage/${firstListing.image}`
-          });
+         
         }
       } catch (error) {
         this.error = error.message;
@@ -274,7 +267,7 @@ export default {
           return;
         }
 
-        // const authStore = useAuthStore();
+        const authStore = useAuthStore();
         const formData = new FormData();
         
         // Add all fields to FormData

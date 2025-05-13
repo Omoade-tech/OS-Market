@@ -7,10 +7,7 @@
       </button>
     </div>
     <div class="sidebar-menu" :class="{ 'mobile-open': isMobileMenuOpen }">
-      <!-- <router-link to="/seller/dashboard" class="sidebar-item" active-class="active" @click="closeMobileMenu">
-        <i class="fas fa-home me-2"></i>
-        Dashboard
-      </router-link> -->
+    
       <router-link to="/seller/add-listing" class="sidebar-item" active-class="active" @click="closeMobileMenu">
         <i class="fas fa-plus-circle me-2"></i>
         Add Listing
@@ -54,13 +51,13 @@ export default {
 .sidebar {
   background-color: #1a1a2e;
   height: 100vh;
-  width: 250px;
+  width: 200px;
   position: fixed;
   left: 0;
   top: 10;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.4);
-  z-index: 900;
-  color: #fff;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  /* z-index: 900; */
+  /* color: #fff; */
 }
 
 .sidebar-header {

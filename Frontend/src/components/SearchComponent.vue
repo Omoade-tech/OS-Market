@@ -1,84 +1,67 @@
 <template>
-  <div class="card mt-4 mb-5">
-    <div class="card-body">
-      <!-- Error Message -->
-      <div v-if="searchError" class="alert alert-danger mb-3">
-        {{ searchError }}
+  <div class="search-container mt-5 mb-1 bg-dark ">
+    <!-- Error Message -->
+    <div v-if="searchError" class="alert alert-danger mb-2">
+      {{ searchError }}
+    </div>
+
+    <div class="search-bar">
+      <!-- Search by Name -->
+      <div class="search-input">
+        <i class="fas fa-search search-icon"></i>
+        <input 
+          type="text" 
+          placeholder="Search by name..." 
+          v-model="searchFilters.name"
+          @input="handleSearch"
+        >
       </div>
 
-      <div class="d-flex align-items-center gap-2">
-        <!-- Search by Name -->
-        <div class="flex-grow-1">
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="fas fa-search"></i>
-            </span>
-            <input 
-              type="text" 
-              class="form-control" 
-              placeholder="Search by name..." 
-              v-model="searchFilters.name"
-              @input="handleSearch"
-            >
-          </div>
-        </div>
-
-        <!-- Search by Location -->
-        <div class="flex-grow-1">
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="fas fa-map-marker-alt"></i>
-            </span>
-            <input 
-              type="text" 
-              class="form-control" 
-              placeholder="Search by location..." 
-              v-model="searchFilters.location"
-              @input="handleSearch"
-            >
-          </div>
-        </div>
-
-        <!-- Filter by Condition -->
-        <div class="w-25">
-          <select 
-            class="form-select" 
-            v-model="searchFilters.condition"
-            @change="handleSearch"
-          >
-            <option value="">All Conditions</option>
-            <option v-for="condition in conditions" :key="condition" :value="condition">
-              {{ condition }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Filter by Category -->
-        <div class="w-25">
-          <select 
-            class="form-select" 
-            v-model="searchFilters.categories"
-            @change="handleSearch"
-          >
-            <option value="">All Categories</option>
-            <option v-for="category in categories" :key="category" :value="category">
-              {{ category }}
-            </option>
-          </select>
-        </div>
-
-        
-
-        <!-- Clear Filters Button -->
-        <div>
-          <button 
-            class="btn btn-outline-secondary" 
-            @click="clearFilters"
-          >
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
+      <!-- Search by Location -->
+      <div class="search-input">
+        <i class="fas fa-map-marker-alt search-icon"></i>
+        <input 
+          type="text" 
+          placeholder="Search by location..." 
+          v-model="searchFilters.location"
+          @input="handleSearch"
+        >
       </div>
+
+      <!-- Filter by Condition -->
+      <div class="search-select">
+        <select 
+          v-model="searchFilters.condition"
+          @change="handleSearch"
+        >
+          <option value="">All Conditions</option>
+          <option v-for="condition in conditions" :key="condition" :value="condition">
+            {{ condition }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Filter by Category -->
+      <div class="search-select">
+        <select 
+          v-model="searchFilters.categories"
+          @change="handleSearch"
+        >
+          <option value="">All Categories</option>
+          <option v-for="category in categories" :key="category" :value="category">
+            {{ category }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Clear Filters Button -->
+      <button 
+        class="clear-btn" 
+        @click="clearFilters"
+        title="Clear filters"
+      >
+        <i class="fas fa-times"></i>
+      </button>
     </div>
   </div>
 </template>
@@ -159,40 +142,133 @@ export default {
 </script>
 
 <style scoped>
-.form-control:focus,
-.form-select:focus {
+.search-container {
+  background: #fff;
+  padding: 0.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}
+
+.search-input {
+  position: relative;
+  flex: 1;
+  min-width: 150px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.search-input input {
+  width: 100%;
+  padding: 0.5rem 0.5rem 0.5rem 2rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.search-input input:focus {
   border-color: #3498db;
-  box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  outline: none;
 }
 
-.input-group-text {
-  background-color: #f8f9fa;
-  border-right: none;
+.search-select {
+  min-width: 100px;
+  max-width: 120px;
 }
 
-.form-control {
-  border-left: none;
+.search-select select {
+  width: 100%;
+  padding: 0.5rem 1.5rem 0.5rem 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background-color: #fff;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.form-control:focus {
-  border-left: 1px solid #ced4da;
+.search-select select:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  outline: none;
 }
 
-.btn-outline-secondary:hover {
-  background-color: #6c757d;
-  color: white;
+.clear-btn {
+  padding: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fff;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+}
+
+.clear-btn:hover {
+  background: #f8f9fa;
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
 }
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
-  .d-flex {
+  .search-bar {
     flex-wrap: wrap;
   }
   
-  .flex-grow-1,
-  .w-25 {
-    width: 100% !important;
-    margin-bottom: 0.5rem;
+  .search-input {
+    width: calc(50% - 0.5rem);
+    min-width: 120px;
+  }
+  
+  .search-select {
+    width: calc(25% - 0.5rem);
+    min-width: 100px;
+    max-width: none;
+  }
+  
+  .clear-btn {
+    width: 36px;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-input,
+  .search-select {
+    width: 100%;
+    max-width: none;
   }
 }
 </style> 

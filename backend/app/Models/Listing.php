@@ -31,7 +31,7 @@ class Listing extends Model
             }
             
             // For storage images, ensure proper URL construction
-            $imagePath = ltrim($this->image, '/');
+            $imagePath = ltrim($this->image, characters: '/');
             $baseUrl = rtrim(config('app.url'), '/');
             
             // Return the storage URL without checking file existence

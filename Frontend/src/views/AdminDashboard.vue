@@ -17,24 +17,24 @@
         </div>
 
         <!-- Welcome Card -->
-        <div class="card welcome-card mb-4">
-          <div class="card-body">
+        <div class="card welcome-card mb-4 ">
+          <div class="card-body bg-dark text-light">
             <h2 class="card-title">Welcome, {{ user?.name || 'Admin' }}! 👋</h2>
             <p class="card-text">This is your admin dashboard where you can:</p>
-            <ul class="feature-list">
-              <li class="feature-item">
+            <ul class="feature-list text-light">
+              <li class="feature-item text-light">
                 <i class="bi bi-list-check"></i>
                 Manage listings and their status
               </li>
-              <li class="feature-item">
+              <li class="feature-item text-light">
                 <i class="bi bi-graph-up"></i>
                 Monitor marketplace activity
               </li>
-              <li class="feature-item">
+              <li class="feature-item text-light">
                 <i class="bi bi-bar-chart"></i>
                 View listing statistics
               </li>
-              <li class="feature-item">
+              <li class="feature-item text-light">
                 <i class="bi bi-flag"></i>
                 Handle user reports
               </li>

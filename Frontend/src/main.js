@@ -7,10 +7,11 @@ import "vue-toastification/dist/index.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
+// import './assets/main.css';
+
 import App from './App.vue'
 import router from './router'
 import Listing from './views/Listing.vue'
-import SellerSidebar from './components/SellerSidebar.vue'
 
 const app = createApp(App)
 
@@ -24,11 +25,12 @@ const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
-app.use(Toast);
+app.use(Toast, {
+  transition: "Vue-Toastification__bounce",
+  maxToasts: 3,
+  newestOnTop: true
+})
 
-// Register global components
 app.component('Listing', Listing)
-app.component('SellerSidebar', SellerSidebar)
 
-// Mount the app to the DOM
 app.mount('#app')
