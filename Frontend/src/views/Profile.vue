@@ -374,7 +374,7 @@ export default {
           this.toast.error('Invalid file type. Please upload a JPEG, PNG, or GIF image.', {
             timeout: 5000,
           });
-          event.target.value = ''; // Clear the file input
+          event.target.value = ''; 
           return;
         }
 
@@ -385,7 +385,7 @@ export default {
           this.toast.error('File size too large. Maximum size is 2MB.', {
             timeout: 5000,
           });
-          event.target.value = ''; // Clear the file input
+          event.target.value = ''; 
           return;
         }
 
@@ -524,7 +524,6 @@ export default {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  background-color: #f0f8ff;
   min-height: 100vh;
 }
 

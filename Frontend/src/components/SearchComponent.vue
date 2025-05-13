@@ -1,5 +1,5 @@
 <template>
-  <div class="search-container mt-5 mb-4 bg-dark ">
+  <div class="search-container mt-5 mb-1 bg-dark ">
     <!-- Error Message -->
     <div v-if="searchError" class="alert alert-danger mb-2">
       {{ searchError }}

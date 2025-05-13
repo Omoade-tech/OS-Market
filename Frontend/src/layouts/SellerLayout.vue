@@ -23,13 +23,15 @@ export default {
   display: flex;
   min-height: 100vh;
   margin-top: 60px; 
+  background-color: #f0f8ff;
 }
 
 .main-content {
   flex: 1;
-  margin-left: 250px; 
+  margin-left: 200px; 
   padding: 20px;
-  background-color: #f8f9fa;
+    
+
   min-height: calc(100vh - 60px);
 }
 

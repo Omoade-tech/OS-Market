@@ -51,12 +51,12 @@ export default {
 .sidebar {
   background-color: #1a1a2e;
   height: 100vh;
-  width: 210px;
+  width: 200px;
   position: fixed;
   left: 0;
   top: 10;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 900;
+  /* z-index: 900; */
   /* color: #fff; */
 }
 

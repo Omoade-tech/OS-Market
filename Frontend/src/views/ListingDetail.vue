@@ -36,7 +36,7 @@
             </button>
           </div>
 
-          <div class="image-action">
+          <div class="image-action mt-4">
               <h2><i class="fas fa-map-marked-alt"></i> Location</h2>
               <p class="location">
                 <i class="fas fa-map-marker-alt"></i>
