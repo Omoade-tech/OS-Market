@@ -131,4 +131,67 @@ class ProfileController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Update the authenticated user's profile image
+     */
+    public function updateImage(Request $request)
+    {
+        try {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            // Validate the request data
+            $request->validate([
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+            ]);
+
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($user->image && !str_starts_with($user->image, 'http')) {
+                    $oldPath = str_replace('public/', '', $user->image);
+                    if (Storage::disk('public')->exists($oldPath)) {
+                        Storage::disk('public')->delete($oldPath);
+                    }
+                }
+
+                // Store new image
+                $path = $request->file('image')->store('profile_images', 'public');
+                $user->image = str_replace('public/', '', $path);
+                $user->save();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Profile image updated successfully',
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->role,
+                        'image' => $user->image_url,
+                        'created_at' => $user->created_at,
+                        'updated_at' => $user->updated_at
+                    ]
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No image file provided'
+            ], 400);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Image upload failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Image upload failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 } 

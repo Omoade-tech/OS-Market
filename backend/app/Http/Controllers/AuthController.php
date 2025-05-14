@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Schema;
 
+
 class AuthController extends Controller
 {
     public function register(Request $request) {
@@ -117,4 +118,6 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    
 } 

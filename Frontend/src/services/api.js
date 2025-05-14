@@ -337,30 +337,27 @@ export default {
     async updateUserProfile(profileData) {
         try {
             ensureToken();
-            let config = {
+            const response = await apiClient.put('/profile', profileData);
+            return response;
+        } catch (error) {
+            console.error('Failed to update profile:', error);
+            throw error;
+        }
+    },
+
+    // Profile: Update Profile Image
+    async updateProfileImage(formData) {
+        try {
+            ensureToken();
+            const response = await apiClient.post('/profile/image', formData, {
                 headers: {
+                    'Content-Type': 'multipart/form-data',
                     'Accept': 'application/json'
                 }
-            };
-
-            if (profileData.image instanceof File) {
-                const formData = new FormData();
-                formData.append('image', profileData.image);
-                Object.keys(profileData).forEach(key => {
-                    if (key !== 'image' && profileData[key] !== null) {
-                        formData.append(key, profileData[key]);
-                    }
-                });
-
-                config.headers['Content-Type'] = 'multipart/form-data';
-                const response = await apiClient.put('/profile', formData, config);
-                return response.data;
-            } else {
-                const response = await apiClient.put('/profile', profileData, config);
-                return response.data;
-            }
+            });
+            return response;
         } catch (error) {
-            console.error('API: Profile update error:', error);
+            console.error('Failed to update profile image:', error);
             throw error;
         }
     },
@@ -376,18 +373,6 @@ export default {
             throw error;
         }
     },
-
-    // Listings: Get user's listings
-    // async getUserListings(userId) {
-    //     try {
-    //         ensureToken();
-    //         const response = await apiClient.get(`/listings/user/${userId}`);
-    //         return response.data;
-    //     } catch (error) {
-    //         console.error('Failed to fetch user listings:', error);
-    //         throw error;
-    //     }
-    // },
 
     // Get seller listings
     async getSellerListings() {
