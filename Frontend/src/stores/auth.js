@@ -233,6 +233,30 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
+        async updateProfileImage(formData) {
+            this.loading = true;
+            this.error = null;
+
+            try {
+                const response = await api.updateProfileImage(formData);
+                if (response && response.data) {
+                    // Update the user object with the new image URL
+                    this.user = {
+                        ...this.user,
+                        image: response.data.user.image
+                    };
+                    localStorage.setItem('user', JSON.stringify(this.user));
+                    return response.data;
+                }
+                throw new Error('Failed to update profile image: Invalid response format');
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message || 'Failed to update profile image';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
         // Listing actions
         async fetchListings(page = 1) {
             try {

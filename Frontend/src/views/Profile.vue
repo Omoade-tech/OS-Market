@@ -1,5 +1,5 @@
 <template>
-  <div class="profile-container">
+  <div class="profile-container mt-4">
     <div class="profile-card">
       <div class="card-header">
         <h5><i class="fas fa-user-circle me-2"></i>User Profile</h5>
@@ -363,7 +363,7 @@ export default {
       this.modalInstance.show();
     },
 
-    handleImageUpload(event) {
+    async handleImageUpload(event) {
       const file = event.target.files[0];
       
       if (file) {
@@ -389,22 +389,36 @@ export default {
           return;
         }
 
-        // Create a preview URL
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          // Update the user object with the preview URL
+        try {
+          // Create FormData for image upload
+          const formData = new FormData();
+          formData.append('image', file);
+
+          // Show loading state
+          this.loading = true;
+
+          // Upload image using the auth store
+          const response = await this.authStore.updateProfileImage(formData);
+          
+          // Show success message
+          this.toast.success('Profile image updated successfully!', {
+            timeout: 3000,
+          });
+
+          // Update the user object with the new image URL
           this.user = {
             ...this.user,
-            image: e.target.result
+            image: response.user.image
           };
-        };
-        reader.readAsDataURL(file);
-
-        // Store the file in the form
-        this.profileForm.image = file;
-
-        // Automatically submit the profile update
-        this.submitProfileUpdate();
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          this.toast.error(error.response?.data?.message || 'Failed to upload image', {
+            timeout: 5000,
+          });
+        } finally {
+          this.loading = false;
+          event.target.value = ''; // Reset file input
+        }
       }
     },
 
@@ -414,103 +428,71 @@ export default {
     },
 
     async submitProfileUpdate() {
-      this.updating = true;
-      this.updateError = null;
+  this.updating = true;
+  this.updateError = null;
 
-      try {
-        // Create FormData object for multipart/form-data
-        const formData = new FormData();
-        
-        // Log initial form data
-        console.log('Initial profileForm data:', this.profileForm);
-        
-        // Add all form fields to FormData
-        Object.keys(this.profileForm).forEach(key => {
-          if (key === 'image' && this.profileForm[key] instanceof File) {
-            formData.append('image', this.profileForm[key]);
-            console.log('Adding image file:', {
-              name: this.profileForm[key].name,
-              type: this.profileForm[key].type,
-              size: this.profileForm[key].size
-            });
-          } else if (key !== 'image') {
-            const value = this.profileForm[key] || this.user[key] || '';
-            formData.append(key, value);
-            console.log(`Adding field ${key}:`, value);
-          }
-        });
-
-        // Log complete FormData contents
-        console.log('Complete FormData contents:');
-        for (let pair of formData.entries()) {
-          console.log(`${pair[0]}: ${pair[1]}`);
+  try {
+    // Create FormData object for multipart/form-data
+    const formData = new FormData();
+    
+    // Add all form fields to FormData
+    Object.keys(this.profileForm).forEach(key => {
+      if (key === 'image' && this.profileForm[key] instanceof File) {
+        formData.append('image', this.profileForm[key]);
+      } else if (key !== 'image') {
+        // Only append non-empty values
+        if (this.profileForm[key] !== null && this.profileForm[key] !== undefined) {
+          formData.append(key, this.profileForm[key]);
         }
-        
-        // Ensure required fields are present
-        if (!formData.get('name') || !formData.get('email')) {
-          console.error('Missing required fields:', {
-            name: formData.get('name'),
-            email: formData.get('email')
-          });
-          this.toast.error('Name and email are required fields', {
-            timeout: 5000,
-          });
-          return;
-        }
-
-        console.log('Sending profile update request...');
-        const response = await this.authStore.updateProfile(formData);
-        console.log('Profile update response:', response);
-        
-        this.user = response;
-        this.modalInstance.hide();
-        this.toast.success('Profile updated successfully!', {
-          timeout: 3000,
-        });
-      } catch (error) {
-        console.error('Error updating profile:', error);
-        
-        // Enhanced error logging
-        if (error.response) {
-          console.error('Error response details:', {
-            status: error.response.status,
-            statusText: error.response.statusText,
-            data: error.response.data,
-            headers: error.response.headers
-          });
-        }
-        
-        // Handle validation errors
-        if (error.response?.status === 422) {
-          const validationErrors = error.response.data.errors;
-          console.error('Validation errors:', validationErrors);
-          
-          if (validationErrors) {
-            // Show each validation error
-            Object.keys(validationErrors).forEach(field => {
-              console.error(`Validation error for ${field}:`, validationErrors[field]);
-              this.toast.error(`${field}: ${validationErrors[field].join(', ')}`, {
-                timeout: 5000,
-              });
-            });
-          } else {
-            console.error('Validation failed without specific errors:', error.response.data);
-            this.toast.error(error.response.data.message || 'Validation failed', {
-              timeout: 5000,
-            });
-          }
-        } else {
-          console.error('Non-validation error:', error.message);
-          this.toast.error(error.response?.data?.message || error.message || 'Failed to update profile', {
-            timeout: 5000,
-          });
-        }
-        
-        this.updateError = error.response?.data?.message || error.message || 'Failed to update profile';
-      } finally {
-        this.updating = false;
       }
-    },
+    });
+
+    // Ensure required fields are present
+    if (!this.profileForm.name || !this.profileForm.email) {
+      this.toast.error('Name and email are required fields', {
+        timeout: 5000,
+      });
+      return;
+    }
+
+    const response = await this.authStore.updateProfile(formData);
+    
+    this.user = response;
+    this.modalInstance.hide();
+    this.toast.success('Profile updated successfully!', {
+      timeout: 3000,
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    
+    // Handle validation errors
+    if (error.response?.status === 422) {
+      const validationErrors = error.response.data.errors;
+      
+      if (validationErrors) {
+        // Show each validation error
+        Object.keys(validationErrors).forEach(field => {
+          this.toast.error(`${field}: ${validationErrors[field].join(', ')}`, {
+            timeout: 5000,
+          });
+        });
+      } else {
+        this.toast.error(error.response.data.message || 'Validation failed', {
+          timeout: 5000,
+        });
+      }
+    } else {
+      console.error('Non-validation error:', error.message);
+      this.toast.error(error.response?.data?.message || error.message || 'Failed to update profile', {
+        timeout: 5000,
+      });
+    }
+    
+    this.updateError = error.response?.data?.message || error.message || 'Failed to update profile';
+  } finally {
+    this.updating = false;
+  }
+},
 
     redirectToLogin() {
       this.router.push('/login');

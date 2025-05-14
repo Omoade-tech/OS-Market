@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile/image', [ProfileController::class, 'updateImage']);
     
     // Listing routes
     Route::get('/listings', [ListingController::class, 'index']);             
