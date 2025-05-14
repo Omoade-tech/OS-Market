@@ -66,7 +66,7 @@ export default {
         } else {
           // Fallback to Nigeria coordinates if location not found
           coordinates = {
-            lat: 9.0820,  // Nigeria's approximate center
+            lat: 9.0820,  
             lon: 8.6753
           };
           this.geocodingError = true;

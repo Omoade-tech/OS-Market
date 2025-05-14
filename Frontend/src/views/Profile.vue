@@ -417,7 +417,7 @@ export default {
           });
         } finally {
           this.loading = false;
-          event.target.value = ''; // Reset file input
+          event.target.value = ''; 
         }
       }
     },

@@ -20,7 +20,7 @@
             <div class="text-center text-white px-4 px-md-8">
               <h1 class="display-4 fw-bold mb-4">Welcome to Open Source Market</h1>
               <p class="fs-4 mb-4">Where buyers and sellers meet for the exchange of services</p>
-              <router-link to="/signup" class="btn btn-primary btn-lg rounded-pill px-5 py-3">
+              <router-link to="/login" class="btn btn-primary btn-lg rounded-pill px-5 py-3">
                 Join Now
               </router-link>
             </div>

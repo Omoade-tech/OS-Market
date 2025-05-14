@@ -260,7 +260,7 @@ export default {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
-  background-color: #f0f8ff; /* Light blue background */
+  background-color: #f0f8ff; 
 }
 
 .breadcrumb-nav {
