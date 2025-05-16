@@ -1,16 +1,5 @@
 FROM php:8.2-apache
 
-
-# Copy existing application directory
-COPY . .
-
-# Copy .env file
-COPY .env .env
-
-# Install dependencies
-RUN composer install --no-dev
-
-
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
@@ -37,6 +26,9 @@ WORKDIR /var/www/html
 # Copy existing application directory
 COPY . .
 
+# Copy .env.example to .env if .env doesn't exist
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
+
 # Install dependencies
 RUN composer install --no-dev
 
@@ -46,9 +38,6 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 # Configure Apache
 RUN a2enmod rewrite
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
-
-# Generate application key
-# RUN php artisan key:generate
 
 # Cache configuration
 RUN php artisan config:cache
