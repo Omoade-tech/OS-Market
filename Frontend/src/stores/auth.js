@@ -261,8 +261,12 @@ export const useAuthStore = defineStore('auth', {
         async fetchListings(page = 1) {
             try {
                 const response = await api.listings.getAll(page, 'approved');
-                this.listings = response.data;
-                return response;
+                if (response.success) {
+                    this.listings = response.data;
+                    return response;
+                } else {
+                    throw new Error(response.message || 'Failed to fetch listings');
+                }
             } catch (error) {
                 console.error('Error fetching listings:', error);
                 throw error;

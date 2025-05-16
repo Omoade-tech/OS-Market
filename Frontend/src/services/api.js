@@ -241,6 +241,17 @@ export default {
                 console.error('Failed to search listings:', error);
                 throw error;
             }
+        },
+
+        async purchaseListing(listingId, paymentData) {
+            try {
+                ensureToken();
+                const response = await apiClient.post(`/listings/${listingId}/purchase`, paymentData);
+                return response.data;
+            } catch (error) {
+                console.error('Failed to purchase listing:', error);
+                throw error;
+            }
         }
     },
 

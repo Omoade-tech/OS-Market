@@ -337,23 +337,7 @@ class ListingController extends Controller
             
             $listings = Listing::where('user_id', $user->id)
                 ->orderBy('created_at', 'desc')
-                ->get()
-                ->map(function ($listing) {
-                    return [
-                        'id' => $listing->id,
-                        'name' => $listing->name,
-                        'description' => $listing->description,
-                        'price' => $listing->price,
-                        'image' => $listing->image,
-                        'image_url' => $listing->image_url,
-                        'categories' => $listing->categories,
-                        'condition' => $listing->condition,
-                        'status' => $listing->status,
-                        'location' => $listing->location,
-                        'created_at' => $listing->created_at->format('Y-m-d H:i:s'),
-                        'updated_at' => $listing->updated_at->format('Y-m-d H:i:s')
-                    ];
-                });
+                ->get();
 
             return response()->json([
                 'success' => true,
@@ -461,20 +445,7 @@ class ListingController extends Controller
                     ->latest()
                     ->take(5)
                     ->get()
-                    ->map(function ($listing) {
-                        return [
-                            'id' => $listing->id,
-                            'name' => $listing->name,
-                            'price' => $listing->price,
-                            'status' => $listing->status,
-                            'created_at' => $listing->created_at->format('Y-m-d H:i:s'),
-                            'user' => [
-                                'id' => $listing->user->id,
-                                'name' => $listing->user->name,
-                                'email' => $listing->user->email
-                            ]
-                        ];
-                    })
+                    
             ];
 
             return response()->json([

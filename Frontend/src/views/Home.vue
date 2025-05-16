@@ -19,8 +19,22 @@
           <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center">
             <div class="text-center text-white px-4 px-md-8">
               <h1 class="display-4 fw-bold mb-4">Welcome to Open Source Market</h1>
-              <p class="fs-4 mb-4">Where buyers and sellers meet for the exchange of services</p>
-              <router-link to="/signup" class="btn btn-primary btn-lg rounded-pill px-5 py-3">
+              <p class="fs-4 mb-1">Where buyers and sellers meet for the exchange of services</p>
+
+              
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-10">
+            <SearchComponent 
+              @search-results="handleSearchResults"
+              @search-error="handleSearchError"
+              @clear-filters="handleClearFilters"
+            />
+          </div>
+        </div>
+      </div>
+  
+              <router-link to="/login" class="btn btn-primary btn-lg rounded-pill px-5 py-3">
                 Join Now
               </router-link>
             </div>
@@ -100,6 +114,67 @@
       </div>
     </section>
 
+  
+
+    <!-- Featured Listings -->
+    <section class="py-5">
+      <div class="container">
+        <h2 class="text-center fw-bold mb-4">Featured Listings</h2>
+        <div v-if="loading" class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <div v-else-if="error" class="alert alert-danger">
+          {{ error }}
+        </div>
+        <div v-else class="row g-4">
+          <div v-for="listing in featuredListings" :key="listing.id" class="col-md-4 col-sm-6">
+            <div class="card h-100 listing-card">
+              <div class="card-img-container">
+                <img 
+                  v-if="listing.image_url" 
+                  :src="listing.image_url" 
+                  class="card-img-top" 
+                  :alt="listing.name"
+                  @error="handleImageError"
+                >
+                <img 
+                  v-else 
+                  src="https://placehold.co/640x480/004477/FFFFFF?text=No+Image" 
+                  class="card-img-top" 
+                  :alt="listing.name"
+                >
+                <div class="card-img-overlay">
+                  <span class="badge bg-primary">{{ listing.condition }}</span>
+                </div>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-truncate">{{ listing.name }}</h5>
+                <div class="card-text mb-2">
+                  <div class="price-tag">
+                    <i class="fas fa-tag"></i>
+                    <span class="price">${{ listing.price }}</span>
+                  </div>
+                </div>
+                <div class="card-text mb-3">
+                  <small class="text-muted">
+                    <i class="fas fa-map-marker-alt"></i>
+                    {{ listing.location }}
+                  </small>
+                </div>
+                <div class="mt-auto">
+                  <router-link :to="{ name: 'listing-detail', params: { id: listing.id }}" class="btn btn-primary w-100">
+                    <i class="fas fa-eye me-2"></i>View Details
+                  </router-link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- CTA -->
     <section class="py-5 text-center bg-primary text-white">
       <div class="container">
@@ -110,18 +185,25 @@
         </router-link>
       </div>
     </section>
-
-  
   </div>
 </template>
 
 <script>
+import { useAuthStore } from '@/stores/auth.js';
+import SearchComponent from '@/components/SearchComponent.vue';
+
 export default {
+  components: {
+    SearchComponent
+  },
   data() {
     return {
       currentSlide: 0,
       placeholder: 'https://via.placeholder.com/2070x600?text=Image+Unavailable',
       interval: null,
+      loading: false,
+      error: null,
+      featuredListings: [],
       slides: [
         { image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c', alt: 'Tech workspace' },
         { image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d', alt: 'Freelancer coding' },
@@ -134,7 +216,7 @@ export default {
       ],
       testimonials: [
         { quote: 'This platform helped me find amazing clients!', name: 'Jane Doe', role: 'Freelancer' },
-        { quote: 'It’s simple, fast, and reliable.', name: 'John Smith', role: 'Buyer' },
+        { quote: "It's simple, fast, and reliable.", name: 'John Smith', role: 'Buyer' },
         { quote: 'The best place to showcase your digital services.', name: 'Amina Yusuf', role: 'Developer' }
       ]
     };
@@ -150,10 +232,30 @@ export default {
     },
     onImageError(event) {
       event.target.src = this.placeholder;
-    }
+    },
+    async fetchFeaturedListings() {
+      this.loading = true;
+      this.error = null;
+      try {
+        const authStore = useAuthStore();
+        const response = await authStore.fetchListings(1);
+        if (response.success) {
+          this.featuredListings = response.data.slice(0, 9); // Get first 9 listings
+        } else {
+          this.error = response.message || 'Failed to fetch listings';
+        }
+      } catch (error) {
+        console.error('Error fetching featured listings:', error);
+        this.error = 'Failed to load featured listings';
+      } finally {
+        this.loading = false;
+      }
+    },
+    
   },
   mounted() {
     this.startAutoSlide();
+    this.fetchFeaturedListings();
   },
   beforeUnmount() {
     clearInterval(this.interval);
@@ -162,5 +264,71 @@ export default {
 </script>
 
 <style scoped>
-/* Optional: additional fine-tuning */
+.listing-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.listing-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.card-img-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.card-img-top {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.listing-card:hover .card-img-top {
+  transform: scale(1.05);
+}
+
+.card-img-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 0;
+}
+
+.badge {
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.card-body {
+  padding: 1.25rem;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.75rem;
+}
+
+.price-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.price {
+  color: #3498db;
+}
 </style>

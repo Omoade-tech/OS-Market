@@ -42,11 +42,13 @@
                 <i class="fas fa-map-marker-alt"></i>
                 {{ listing.location || 'Location not specified' }}
               </p>
-              <MapView 
-                v-if="listing.location"
-                :location="listing.location"
-                class="mt-3"
-              />
+              <div class="map-container">
+                <MapView 
+                  v-if="listing.location"
+                  :location="listing.location"
+                  class="mt-3"
+                />
+              </div>
             </div>
 
         </div>
@@ -75,13 +77,48 @@
           </div>
 
           <div class="listing-actions">
+            <button class="secondary-btn buy-btn" @click="showPayment = true" v-if="isAuthenticated && listing.user_id !== currentUserId">
+              <i class="fas fa-shopping-cart"></i> Buy Now
+            </button>
             <button class="primary-btn contact-btn" @click="showMessageForm = !showMessageForm">
               <i class="fas fa-envelope"></i> 
               {{ showMessageForm ? 'Hide Message Form' : 'Contact Seller' }}
             </button>
-            <button class="secondary-btn save-btn" @click="saveListing">
-              <i class="fas fa-heart"></i> Save
-            </button>
+          </div>
+
+          <!-- Payment Modal -->
+          <div v-if="showPayment" class="modal-overlay">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3><i class="fas fa-credit-card"></i> Complete Your Purchase</h3>
+                <button class="close-btn" @click="showPayment = false">&times;</button>
+              </div>
+              <div class="modal-body">
+                <div class="purchase-summary">
+                  <h4>Order Summary</h4>
+                  <div class="summary-item">
+                    <span>Item:</span>
+                    <span>{{ listing.name }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span>Price:</span>
+                    <span>${{ listing.price }}</span>
+                  </div>
+                  <div class="summary-item total">
+                    <span>Total:</span>
+                    <span>${{ listing.price }}</span>
+                  </div>
+                </div>
+
+                <PaymentMethod
+                  :order-id="listing.id"
+                  :amount="listing.price"
+                  @payment-confirmed="handlePaymentConfirmed"
+                  @payment-error="handlePaymentError"
+                  @cancel="showPayment = false"
+                />
+              </div>
+            </div>
           </div>
 
           <div class="detail-sections">
@@ -98,13 +135,7 @@
                 </span>
               </div>
             </div>
-            <div class="main-image">
-            <img 
-              :src="listing.image_url || getImageUrl(listing.image)" 
-              :alt="listing.name"
-              @error="(e) => e.target.src = 'https://placehold.co/640x480/004477/FFFFFF?text=No+Image'"
-            >
-          </div>
+            
             
           </div>
         </div>
@@ -129,6 +160,7 @@
 import { useAuthStore } from '@/stores/auth.js';
 import MessageForm from '@/components/MessageForm.vue';
 import MapView from '@/components/MapView.vue';
+import PaymentMethod from '@/components/PaymentMethod.vue';
 import { useToast } from 'vue-toastification';
 
 export default {
@@ -136,7 +168,8 @@ export default {
   
   components: {
     MessageForm,
-    MapView
+    MapView,
+    PaymentMethod
   },
   
   setup() {
@@ -151,7 +184,9 @@ export default {
       loading: true,
       error: null,
       listingData: null,
-      showMessageForm: false
+      showMessageForm: false,
+      showPayment: false,
+      processingPurchase: false
     };
   },
 
@@ -164,6 +199,12 @@ export default {
     },
     hasError() {
       return this.error || this.authStore.getError;
+    },
+    isAuthenticated() {
+      return this.authStore.isAuthenticated;
+    },
+    currentUserId() {
+      return this.authStore.user?.id;
     }
   },
 
@@ -235,15 +276,33 @@ export default {
       }
     },
 
-    async saveListing() {
+    async handlePaymentConfirmed(paymentData) {
+      this.processingPurchase = true;
       try {
-        // Implement save listing functionality
-        this.toast.success('Listing saved successfully!');
+        const response = await this.authStore.purchaseListing(this.listing.id, {
+          payment_method: 'card',
+          payment_data: paymentData
+        });
+
+        if (response.success) {
+          this.toast.success('Payment successful!');
+          this.showPayment = false;
+          this.$router.push({ name: 'orders' });
+        } else {
+          throw new Error(response.message || 'Payment failed');
+        }
       } catch (error) {
-        console.error('Error saving listing:', error);
-        this.toast.error('Failed to save listing');
+        console.error('Payment error:', error);
+        this.toast.error(error.message || 'Failed to process payment');
+      } finally {
+        this.processingPurchase = false;
       }
-    }
+    },
+
+    handlePaymentError(error) {
+      this.toast.error(error);
+    },
+
   },
 
   mounted() {
@@ -260,7 +319,7 @@ export default {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
-  background-color: #f0f8ff; /* Light blue background */
+  background-color: #f0f8ff; 
 }
 
 .breadcrumb-nav {
@@ -536,7 +595,7 @@ export default {
   }
   
   .listing-header h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
   
   .main-image {
@@ -549,11 +608,278 @@ export default {
   
   .listing-actions {
     flex-direction: column;
+    gap: 1rem;
   }
   
   .primary-btn, .secondary-btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .payment-section {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .section-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .purchase-summary {
+    padding: 1rem;
+  }
+
+  .summary-item {
+    font-size: 0.9rem;
+  }
+
+  .summary-item.total {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .listing-detail {
+    padding: 0.5rem;
+  }
+
+  .breadcrumb-nav {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .listing-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .main-image {
+    height: 250px;
+  }
+
+  .price {
+    font-size: 1.3rem;
+  }
+
+  .condition {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .quick-info {
+    grid-template-columns: 1fr;
+    padding: 0.75rem;
+  }
+
+  .info-item {
+    font-size: 0.9rem;
+  }
+
+  .detail-section {
+    padding: 1rem;
+  }
+
+  .detail-section h2 {
+    font-size: 1.2rem;
+  }
+
+  .category-tag {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .payment-section {
+    padding: 0.75rem;
+  }
+
+  .section-header {
+    margin-bottom: 1rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .purchase-summary {
+    padding: 0.75rem;
+  }
+
+  .summary-item {
+    font-size: 0.85rem;
+  }
+
+  .summary-item.total {
+    font-size: 0.95rem;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-header h3 i {
+  color: #3498db;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+  color: #e74c3c;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.purchase-summary {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.purchase-summary h4 {
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  color: #666;
+}
+
+.summary-item.total {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+  font-weight: bold;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    max-width: 100%;
+    margin: 1rem;
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.3rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .purchase-summary {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .modal-content {
+    margin: 0.5rem;
+  }
+
+  .modal-header {
+    padding: 0.75rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .modal-body {
+    padding: 0.75rem;
+  }
+
+  .purchase-summary {
+    padding: 0.75rem;
+  }
+
+  .summary-item {
+    font-size: 0.9rem;
+  }
+
+  .summary-item.total {
+    font-size: 1rem;
+  }
+}
+
+.map-container {
+  width: 100%;
+  height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .map-container {
+    height: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .map-container {
+    height: 200px;
   }
 }
 </style> 
