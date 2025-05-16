@@ -165,11 +165,6 @@
   
     methods: {
       async fetchListings(page = 1) {
-        if (!this.isAuthenticated) {
-          this.error = 'Please login to view listings.';
-          return;
-        }
-  
         this.loading = true;
         this.error = null;
         this.isSearching = false;
@@ -179,12 +174,6 @@
           if (response.success) {
             this.listings = response.data;
             this.pagination = response.pagination;
-            // Debug: Log the first listing's image URL
-            if (this.listings.length > 0) {
-              console.log('First listing:', this.listings[0]);
-              console.log('Image URL:', this.listings[0].image_url);
-              console.log('Raw image path:', this.listings[0].image);
-            }
           } else {
             this.error = response.message || 'Failed to fetch listings';
           }
@@ -192,9 +181,6 @@
           console.error('Error fetching listings:', error);
           if (error.response) {
             switch (error.response.status) {
-              case 401:
-                this.error = 'Please login to view listings.';
-                break;
               case 404:
                 this.error = 'Listings endpoint not found. Please check your API configuration.';
                 break;
@@ -204,8 +190,6 @@
               default:
                 this.error = error.response.data?.message || 'Failed to fetch listings';
             }
-          } else if (error.message === 'Authentication token is missing') {
-            this.error = 'Please login to view listings.';
           } else {
             this.error = 'Network error. Please check your connection.';
           }

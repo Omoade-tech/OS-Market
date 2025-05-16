@@ -23,15 +23,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/image', [ProfileController::class, 'updateImage']);
     
-    // Listing routes
-    Route::get('/listings', [ListingController::class, 'index']);             
-    Route::get('/listings/search', [ListingController::class, 'search']);     
-    Route::get('/listings/filter-options', [ListingController::class, 'getFilterOptions']);     
+   
     // Get listings by specific user
+    Route::get('/listings/search', [ListingController::class, 'search']); 
+    Route::get('/listings/filter-options', [ListingController::class, 'getFilterOptions']);  
     Route::get('/listings/user/{user_id}', [ListingController::class, 'userListings']); 
-
     Route::post('/listings', [ListingController::class, 'store']);           
-    Route::get('/listings/{id}', [ListingController::class, 'show']);       
+         
     Route::put('/listings/{id}', [ListingController::class, 'update']);       
     Route::delete('/listings/{id}', [ListingController::class, 'destroy']);   
 
@@ -49,3 +47,23 @@ Route::prefix('admin')->middleware(['auth:sanctum', \App\Http\Middleware\AdminMi
     Route::get('/listings/stats', [ListingController::class, 'getListingStats']);
     Route::patch('/listings/{id}/status', [ListingController::class, 'updateListingStatus']);
 });
+
+ // Listing routes
+    Route::get('/listings', [ListingController::class, 'index']);     
+     Route::get('/listings/{id}', [ListingController::class, 'show']);
+
+
+     // ... existing code ...
+
+// // Payment Routes
+// Route::middleware('auth:sanctum')->group(function () {
+//     Route::post('/payments/process', [PaymentController::class, 'processPayment']);
+//     Route::get('/payments/verify/{reference}', [PaymentController::class, 'verifyPayment']);
+// });
+
+// ... existing code ...
+   
+
+
+       
+    

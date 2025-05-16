@@ -37,7 +37,7 @@ const routes = [
     name: 'listing-detail',
     component: ListingDetail,
     meta: { 
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -46,7 +46,7 @@ const routes = [
     component: Login,
     meta: { 
       requiresGuest: true,
-      hideNavbar: true,
+      hideNavbar: false,
       hideFooter: true 
     }
   },
@@ -56,7 +56,7 @@ const routes = [
     component: Signup,
     meta: { 
       requiresGuest: true,
-      hideNavbar: true,
+      hideNavbar: false,
       hideFooter: true 
     }
   },
