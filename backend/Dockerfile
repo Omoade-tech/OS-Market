@@ -39,6 +39,10 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 RUN a2enmod rewrite
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
+# Update Apache configuration to use PORT environment variable
+RUN echo "Listen \${PORT:-80}" > /etc/apache2/ports.conf
+RUN sed -i 's/:80>/:${PORT:-80}>/g' /etc/apache2/sites-available/000-default.conf
+
 # Cache configuration
 RUN php artisan config:cache
 RUN php artisan route:cache
@@ -47,7 +51,7 @@ RUN php artisan route:cache
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Expose port 80
+# Expose port (will be overridden by PORT environment variable)
 EXPOSE 80
 
 # Start Apache with migrations
